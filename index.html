@@ -822,5 +822,27 @@
   <script src="config.js"></script>
   <script src="gas-api.js"></script>
   <script src="app.js"></script>
+  <script>
+    // Tracking langsung dari tautan WhatsApp: ?noreg=001%2FSM%2F2026
+    (function () {
+      try {
+        var noreg = (new URLSearchParams(window.location.search).get('noreg') || '').trim();
+        if (!noreg) return;
+        var jalankan = function () {
+          var inp = document.getElementById('inputNoRegLanding');
+          var btn = document.getElementById('btnCariLanding');
+          if (!inp || !btn) return;
+          inp.value = noreg;
+          btn.click();
+          setTimeout(function () {
+            var hasil = document.getElementById('hasilTrackingLanding');
+            if (hasil && hasil.scrollIntoView) hasil.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 600);
+        };
+        if (document.readyState === 'complete') setTimeout(jalankan, 100);
+        else window.addEventListener('load', function () { setTimeout(jalankan, 100); });
+      } catch (e) { /* abaikan */ }
+    })();
+  </script>
 </body>
 </html>
