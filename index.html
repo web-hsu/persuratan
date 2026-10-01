@@ -945,8 +945,17 @@
         if (noReg) buka(noReg);
       });
 
-      new MutationObserver(tandaiBaris).observe(tabel, { childList: true, subtree: true });
-      tandaiBaris();
+      // Mode aman: buka halaman dengan ?safe=1 untuk mematikan perapian baris (uji pembanding).
+      var modeAman = /[?&]safe=1/.test(window.location.search);
+      var tundaTandai = null;
+      var tandaiAman = function () {
+        if (modeAman) return;
+        clearTimeout(tundaTandai);
+        // ditunda sebentar agar tidak mengganggu proses render tabel oleh app.js
+        tundaTandai = setTimeout(function () { try { tandaiBaris(); } catch (err) { /* abaikan */ } }, 150);
+      };
+      new MutationObserver(tandaiAman).observe(tabel, { childList: true, subtree: true });
+      tandaiAman();
 
       document.getElementById('btnTutupTrackingPopup').addEventListener('click', tutup);
       overlay.addEventListener('click', function (e) { if (e.target === overlay) tutup(); });
