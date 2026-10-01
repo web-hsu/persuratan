@@ -37,6 +37,7 @@
     document.getElementById('tahunFooter').textContent = new Date().getFullYear();
 
     initLandingTracking();
+    initFilterBulanSemuaSurat();
     initLoginModal();
     initSidebarToggle();
     initEditSuratModal();
@@ -1132,22 +1133,101 @@
 
   let DAFTAR_SURAT_CACHE = [];
   let STATUS_FILTER_AKTIF = null; // null | 'Dalam Proses' | 'Selesai / Disetujui' | 'DITOLAK_PERBAIKAN' | 'Informasi (Tanpa Persetujuan)'
+  let HALAMAN_DAFTAR_SURAT = 1;
+  const JUMLAH_BARIS_DAFTAR_SURAT = 50;
 
-  function loadDaftarSuratMasuk() {
+  function initFilterBulanSemuaSurat() {
+    const bulanEl = document.getElementById('filterBulanSemuaSurat');
+    const tahunEl = document.getElementById('filterTahunSemuaSurat');
+    if (!bulanEl || !tahunEl) return;
+
+    const namaBulan = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    const now = new Date();
+    const tahunSekarang = now.getFullYear();
+
+    bulanEl.innerHTML = '<option value="">Semua Bulan</option>' +
+      namaBulan.map(function (nama, i) {
+        return '<option value="' + String(i + 1).padStart(2, '0') + '">' + nama + '</option>';
+      }).join('');
+
+    let tahunHtml = '<option value="">Semua Tahun</option>';
+    for (let y = tahunSekarang; y >= tahunSekarang - 5; y--) {
+      tahunHtml += '<option value="' + y + '">' + y + '</option>';
+    }
+    tahunEl.innerHTML = tahunHtml;
+
+    // Default: bulan berjalan + tahun berjalan agar daftar tidak langsung
+    // menampilkan ribuan data lama.
+    bulanEl.value = String(now.getMonth() + 1).padStart(2, '0');
+    tahunEl.value = String(tahunSekarang);
+
+    if (bulanEl.dataset.bound !== '1') {
+      bulanEl.dataset.bound = '1';
+      tahunEl.dataset.bound = '1';
+      bulanEl.addEventListener('change', function () {
+        HALAMAN_DAFTAR_SURAT = 1;
+        loadDaftarSuratMasuk(true);
+      });
+      tahunEl.addEventListener('change', function () {
+        HALAMAN_DAFTAR_SURAT = 1;
+        loadDaftarSuratMasuk(true);
+      });
+    }
+  }
+
+  function getTanggalMasukParts(value) {
+    if (!value) return null;
+    const s = String(value).trim();
+
+    // Format ISO: yyyy-mm-dd / yyyy-mm-ddTHH:mm:ss
+    let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return { tahun: m[1], bulan: String(m[2]).padStart(2, '0') };
+
+    // Format umum Indonesia: dd/mm/yyyy atau dd-mm-yyyy
+    m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+    if (m) return { tahun: m[3], bulan: String(m[2]).padStart(2, '0') };
+
+    // Fallback untuk string tanggal yang dapat dipahami browser.
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      return {
+        tahun: String(d.getFullYear()),
+        bulan: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    }
+    return null;
+  }
+
+  function loadDaftarSuratMasuk(forceReload) {
     const tbody = document.querySelector('#tabelSemuaSurat tbody');
     const counter = document.getElementById('jumlahSemuaSurat');
-    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Memuat data...</td></tr>';
+    initFilterBulanSemuaSurat();
+
+    // Jangan panggil server setiap kali menu dibuka. Data yang sudah di-cache
+    // langsung ditampilkan; tombol "Muat Ulang" dipakai jika ingin mengambil data terbaru.
+    if (!forceReload && DAFTAR_SURAT_CACHE.length) {
+      HALAMAN_DAFTAR_SURAT = 1;
+      terapkanFilterSemuaSurat();
+      return;
+    }
+
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Memuat data surat terbaru...</td></tr>';
+    if (counter) counter.textContent = 'Mengambil data...';
 
     google.script.run
       .withSuccessHandler(function (list) {
         DAFTAR_SURAT_CACHE = list || [];
+        HALAMAN_DAFTAR_SURAT = 1;
         terapkanFilterSemuaSurat();
       })
       .withFailureHandler(function (err) {
         tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Gagal memuat data: ' + err.message + '</td></tr>';
         if (counter) counter.textContent = '';
       })
-      .getAllSurat(CURRENT_USER.token);
+      .getAllSurat(CURRENT_USER.token, { bulan: document.getElementById('filterBulanSemuaSurat') ? document.getElementById('filterBulanSemuaSurat').value : '', tahun: document.getElementById('filterTahunSemuaSurat') ? document.getElementById('filterTahunSemuaSurat').value : '' });
   }
 
   // Dipanggil dari kartu statistik Dashboard - membuka Daftar Surat Masuk dengan status tertentu terfilter.
@@ -1163,18 +1243,36 @@
   }
 
   function terapkanFilterSemuaSurat() {
+    initFilterBulanSemuaSurat();
+
     const counter = document.getElementById('jumlahSemuaSurat');
     const chip = document.getElementById('filterStatusChip');
     const searchInput = document.getElementById('cariSemuaSurat');
+    const bulanEl = document.getElementById('filterBulanSemuaSurat');
+    const tahunEl = document.getElementById('filterTahunSemuaSurat');
 
-    let list = DAFTAR_SURAT_CACHE;
+    let list = DAFTAR_SURAT_CACHE.slice();
+
+    // Filter periode terlebih dahulu supaya tabel tidak perlu merender seluruh
+    // arsip lama ke DOM.
+    const bulan = bulanEl ? bulanEl.value : '';
+    const tahun = tahunEl ? tahunEl.value : '';
+    if (bulan || tahun) {
+      list = list.filter(function (s) {
+        const parts = getTanggalMasukParts(s.TanggalMasuk);
+        if (!parts) return false;
+        if (bulan && parts.bulan !== bulan) return false;
+        if (tahun && parts.tahun !== tahun) return false;
+        return true;
+      });
+    }
+
     if (STATUS_FILTER_AKTIF === 'DITOLAK_PERBAIKAN') {
       list = list.filter(function (s) { return s.StatusAkhir === 'Ditolak' || s.StatusAkhir === 'Perlu Perbaikan'; });
     } else if (STATUS_FILTER_AKTIF) {
       list = list.filter(function (s) { return s.StatusAkhir === STATUS_FILTER_AKTIF; });
     }
 
-    // Terapkan juga kata kunci pencarian teks (kalau ada) di atas hasil filter status
     const kw = searchInput ? searchInput.value.trim().toLowerCase() : '';
     if (kw) {
       list = list.filter(function (s) {
@@ -1191,20 +1289,34 @@
         chip.style.display = 'none';
       }
     }
-    if (counter) counter.textContent = 'Total: ' + list.length + ' surat' + (STATUS_FILTER_AKTIF ? ' (terfilter)' : '');
 
-    renderTabelSemuaSurat(list);
+    const total = list.length;
+    const totalHalaman = Math.max(1, Math.ceil(total / JUMLAH_BARIS_DAFTAR_SURAT));
+    if (HALAMAN_DAFTAR_SURAT > totalHalaman) HALAMAN_DAFTAR_SURAT = totalHalaman;
+
+    const awal = (HALAMAN_DAFTAR_SURAT - 1) * JUMLAH_BARIS_DAFTAR_SURAT;
+    const halamanList = list.slice(awal, awal + JUMLAH_BARIS_DAFTAR_SURAT);
+
+    if (counter) {
+      counter.textContent = 'Total: ' + total + ' surat' +
+        (STATUS_FILTER_AKTIF ? ' (terfilter)' : '') +
+        (total > JUMLAH_BARIS_DAFTAR_SURAT ? ' • Halaman ' + HALAMAN_DAFTAR_SURAT + '/' + totalHalaman : '');
+    }
+
+    renderTabelSemuaSurat(halamanList, total, totalHalaman);
   }
 
-  function renderTabelSemuaSurat(list) {
+  function renderTabelSemuaSurat(list, total, totalHalaman) {
     const tbody = document.querySelector('#tabelSemuaSurat tbody');
     if (!list.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Tidak ada data yang cocok.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Tidak ada data yang cocok dengan filter.</td></tr>';
+      renderPaginasiDaftarSurat(0, 1);
       return;
     }
+
     const bisaKelola = CURRENT_USER && CURRENT_USER.role === 'Admin TU';
     tbody.innerHTML = list.map(function (s) {
-      const noRegEsc = s.NoRegistrasi.replace(/'/g, "\\'");
+      const noRegEsc = String(s.NoRegistrasi || '').replace(/'/g, "\\'");
       const aksi = bisaKelola
         ? '<div style="display:flex;gap:6px;">' +
             '<button class="btn btn-outline btn-sm" onclick="bukaEditSurat(\'' + noRegEsc + '\')">✏️ Edit</button>' +
@@ -1212,17 +1324,41 @@
           '</div>'
         : '<span class="tahap-meta">-</span>';
       return '<tr>' +
-        '<td>' + s.NoRegistrasi + '</td>' +
-        '<td>' + s.TanggalMasuk + '</td>' +
-        '<td>' + s.SuratDariNama + ' <span class="tahap-meta">(' + s.SuratDariTipe + ')</span></td>' +
-        '<td>' + s.NoSurat + '</td>' +
-        '<td>' + s.Perihal + '</td>' +
-        '<td>' + s.JenisSurat + '</td>' +
-        '<td>' + s.TujuanSurat + '</td>' +
-        '<td><span class="pill ' + statusPillClass(s.StatusAkhir) + '">' + s.StatusAkhir + '</span></td>' +
+        '<td>' + (s.NoRegistrasi || '-') + '</td>' +
+        '<td>' + (s.TanggalMasuk || '-') + '</td>' +
+        '<td>' + (s.SuratDariNama || '-') + ' <span class="tahap-meta">(' + (s.SuratDariTipe || '-') + ')</span></td>' +
+        '<td>' + (s.NoSurat || '-') + '</td>' +
+        '<td>' + (s.Perihal || '-') + '</td>' +
+        '<td>' + (s.JenisSurat || '-') + '</td>' +
+        '<td>' + (s.TujuanSurat || '-') + '</td>' +
+        '<td><span class="pill ' + statusPillClass(s.StatusAkhir) + '">' + (s.StatusAkhir || '-') + '</span></td>' +
         '<td>' + aksi + '</td>' +
         '</tr>';
     }).join('');
+
+    renderPaginasiDaftarSurat(total || list.length, totalHalaman || 1);
+  }
+
+  function renderPaginasiDaftarSurat(total, totalHalaman) {
+    let pager = document.getElementById('paginasiDaftarSurat');
+    const tableWrap = document.querySelector('#tabelSemuaSurat').parentElement;
+
+    if (!pager) {
+      pager = document.createElement('div');
+      pager.id = 'paginasiDaftarSurat';
+      pager.style.cssText = 'display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;';
+      tableWrap.parentElement.appendChild(pager);
+    }
+
+    if (!total || totalHalaman <= 1) {
+      pager.innerHTML = '';
+      return;
+    }
+
+    pager.innerHTML =
+      '<button type="button" class="btn btn-outline btn-sm" id="btnPrevDaftarSurat" ' + (HALAMAN_DAFTAR_SURAT <= 1 ? 'disabled' : '') + '>‹ Sebelumnya</button>' +
+      '<span class="tahap-meta">Halaman ' + HALAMAN_DAFTAR_SURAT + ' dari ' + totalHalaman + ' • ' + total + ' surat</span>' +
+      '<button type="button" class="btn btn-outline btn-sm" id="btnNextDaftarSurat" ' + (HALAMAN_DAFTAR_SURAT >= totalHalaman ? 'disabled' : '') + '>Berikutnya ›</button>';
   }
 
   /* ============================================================
@@ -2050,14 +2186,26 @@
 
   document.addEventListener('input', function (e) {
     if (e.target && e.target.id === 'cariSemuaSurat') {
+      HALAMAN_DAFTAR_SURAT = 1;
       terapkanFilterSemuaSurat();
     }
   });
 
   document.addEventListener('click', function (e) {
-    if (e.target && e.target.id === 'btnRefreshSemuaSurat') loadDaftarSuratMasuk();
+    if (e.target && e.target.id === 'btnRefreshSemuaSurat') {
+      loadDaftarSuratMasuk(true);
+    }
     if (e.target && e.target.id === 'btnHapusFilterStatus') {
       STATUS_FILTER_AKTIF = null;
+      HALAMAN_DAFTAR_SURAT = 1;
+      terapkanFilterSemuaSurat();
+    }
+    if (e.target && e.target.id === 'btnPrevDaftarSurat') {
+      HALAMAN_DAFTAR_SURAT = Math.max(1, HALAMAN_DAFTAR_SURAT - 1);
+      terapkanFilterSemuaSurat();
+    }
+    if (e.target && e.target.id === 'btnNextDaftarSurat') {
+      HALAMAN_DAFTAR_SURAT += 1;
       terapkanFilterSemuaSurat();
     }
   });
