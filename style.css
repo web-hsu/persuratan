@@ -915,3 +915,41 @@
   }
   #tabelSemuaSurat td:nth-child(5) .sel-clamp{ -webkit-line-clamp:3; }
   #tabelSemuaSurat tbody tr:hover td{ transition:none; }
+
+
+  /* ============ POP UP PROSES PERSETUJUAN ============ */
+  #disposisiPopupOverlay{
+    z-index:900; /* di bawah modal konfirmasi/notifikasi WA (1000) agar keduanya tetap muncul di atas */
+    background:rgba(6,37,68,.62);
+    -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+    align-items:flex-start; overflow-y:auto; padding:4vh 20px;
+  }
+  .disposisi-modal{
+    max-width:880px; padding:0; margin:auto; overflow:hidden;
+    border-radius:18px; box-shadow:0 24px 60px rgba(5,19,36,.38);
+    animation:popIn .22s ease;
+  }
+  @keyframes popIn{ from{opacity:0; transform:translateY(16px) scale(.98);} to{opacity:1; transform:none;} }
+  .disposisi-modal-header{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:18px 24px;
+    background:linear-gradient(120deg,var(--navy),var(--navy-dark));
+    border-bottom:3px solid var(--gold);
+  }
+  .disposisi-modal-header h2{ margin:0; font-size:17px; font-weight:800; color:#fff; }
+  .disposisi-modal-header .sub{ margin-top:3px; font-size:12.5px; font-weight:600; color:var(--gold-light); }
+  .disposisi-modal-header .modal-close{ color:#fff; opacity:.8; font-size:28px; padding:0 6px; }
+  .disposisi-modal-header .modal-close:hover{ color:#fff; opacity:1; }
+  .disposisi-body{
+    padding:20px 22px 26px; background:#f6f8fb;
+    max-height:calc(92vh - 82px); overflow-y:auto;
+  }
+  .disposisi-body .card{ box-shadow:none; border:1px solid var(--border); margin-bottom:14px; }
+  .disposisi-body > *:last-child{ margin-bottom:0; }
+  body.disposisi-terbuka{ overflow:hidden; }
+  @media (max-width:600px){
+    #disposisiPopupOverlay{ padding:0; }
+    .disposisi-modal{ border-radius:0; min-height:100vh; }
+    .disposisi-modal-header{ padding:14px 16px; }
+    .disposisi-body{ padding:14px 12px 22px; max-height:none; }
+  }
