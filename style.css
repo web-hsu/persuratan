@@ -872,3 +872,13 @@
   .landing-topbar .brand-sub{ color:#d3e3f4; }
   .landing-hero > p{ color:#e1ecf7; }
   .landing-hero .kicker{ color:#ecc778; }
+
+
+  /* ============ POP UP TRACKING DARI DAFTAR SURAT ============ */
+  #tabelSemuaSurat tbody tr[data-noreg]{ cursor:pointer; }
+  #tabelSemuaSurat tbody tr[data-noreg]:hover td{ background:#e3eefb; }
+  #trackingPopupOverlay .login-modal{
+    max-width:680px; max-height:90vh; overflow-y:auto; padding:22px 22px 26px;
+  }
+  #trackingPopupBody .empty-state{ padding:30px 10px; text-align:center; color:var(--muted); }
+  #trackingPopupBody > *:first-child{ margin-top:0; }
