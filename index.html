@@ -882,9 +882,25 @@
         var rows = tabel.querySelectorAll('tbody tr');
         for (var i = 0; i < rows.length; i++) {
           var tds = rows[i].children;
-          if (tds.length > 2 && !rows[i].hasAttribute('data-noreg')) {
+          if (tds.length < 3) { rows[i].classList.add('row-kosong'); continue; }
+          if (!rows[i].hasAttribute('data-noreg')) {
             var no = (tds[0].textContent || '').trim();
             if (no) { rows[i].setAttribute('data-noreg', no); rows[i].title = 'Klik untuk melihat tracking surat ini'; }
+          }
+          // Batasi teks panjang (Dari, Perihal, Tujuan) agar tinggi semua baris seragam;
+          // teks lengkap tetap tampil saat kursor diarahkan (tooltip) dan di pop up tracking.
+          if (tds.length >= 7) {
+            [2, 4, 6].forEach(function (k) {
+              var td = tds[k];
+              if (td.firstElementChild && td.firstElementChild.classList.contains('sel-clamp')) return;
+              var teks = (td.textContent || '').trim();
+              if (!teks) return;
+              var d = document.createElement('div');
+              d.className = 'sel-clamp';
+              d.title = teks;
+              while (td.firstChild) d.appendChild(td.firstChild);
+              td.appendChild(d);
+            });
           }
         }
       }
