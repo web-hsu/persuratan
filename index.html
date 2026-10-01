@@ -566,6 +566,14 @@
           </span>
 
           <div class="filter-row">
+            <div class="field" style="min-width:150px;">
+              <label>Bulan</label>
+              <select id="filterBulanSemuaSurat"></select>
+            </div>
+            <div class="field" style="min-width:130px;">
+              <label>Tahun</label>
+              <select id="filterTahunSemuaSurat"></select>
+            </div>
             <div class="field" style="flex:1;min-width:220px;">
               <label>Cari Cepat</label>
               <input type="text" id="cariSemuaSurat" placeholder="Ketik No Registrasi, perihal, pengirim, jenis, atau status...">
@@ -577,6 +585,9 @@
             <div class="field" style="margin-left:auto;align-self:end;">
               <span class="tahap-meta" id="jumlahSemuaSurat"></span>
             </div>
+          </div>
+          <div class="desc" style="margin-top:-4px;">
+            Secara default hanya menampilkan surat pada bulan berjalan. Pilih <strong>Semua Bulan</strong> jika ingin melihat seluruh periode.
           </div>
 
           <div class="table-wrap">
