@@ -882,3 +882,36 @@
   }
   #trackingPopupBody .empty-state{ padding:30px 10px; text-align:center; color:var(--muted); }
   #trackingPopupBody > *:first-child{ margin-top:0; }
+
+
+  /* ============ RAPIKAN DAFTAR SURAT MASUK (baris seragam, scroll halus) ============ */
+  /* Satu area scroll saja (tidak bertumpuk dengan scroll halaman) & tidak "mental" saat ujung scroll */
+  .table-wrap:has(#tabelSemuaSurat){
+    max-height:calc(100vh - 250px); min-height:380px;
+    overscroll-behavior:contain;
+  }
+  #tabelSemuaSurat{
+    table-layout:fixed; min-width:1220px;
+    border-collapse:separate; border-spacing:0; /* header sticky tanpa garis bergetar */
+  }
+  #tabelSemuaSurat th:nth-child(1){ width:120px; }
+  #tabelSemuaSurat th:nth-child(2){ width:90px; }
+  #tabelSemuaSurat th:nth-child(3){ width:170px; }
+  #tabelSemuaSurat th:nth-child(4){ width:150px; }
+  #tabelSemuaSurat th:nth-child(5){ width:260px; }
+  #tabelSemuaSurat th:nth-child(6){ width:100px; }
+  #tabelSemuaSurat th:nth-child(7){ width:90px; }
+  #tabelSemuaSurat th:nth-child(8){ width:110px; }
+  #tabelSemuaSurat th:nth-child(9){ width:130px; }
+  #tabelSemuaSurat th{ box-shadow:0 1px 0 var(--border); }
+  #tabelSemuaSurat tbody td{
+    vertical-align:middle; height:86px; /* tinggi baris seragam */
+    overflow-wrap:anywhere;
+  }
+  #tabelSemuaSurat tbody tr.row-kosong td{ height:auto; }
+  #tabelSemuaSurat .sel-clamp{
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+    overflow:hidden; line-height:1.4;
+  }
+  #tabelSemuaSurat td:nth-child(5) .sel-clamp{ -webkit-line-clamp:3; }
+  #tabelSemuaSurat tbody tr:hover td{ transition:none; }
