@@ -556,7 +556,7 @@
       <div class="page" id="page-semuasurat">
         <div class="card">
           <h2>Daftar Surat Masuk</h2>
-          <div class="desc">Menampilkan seluruh data surat masuk yang teregistrasi di sistem. Gunakan kolom pencarian untuk menyaring berdasarkan No Registrasi, perihal, pengirim, jenis, atau status.</div>
+          <div class="desc">Menampilkan seluruh data surat masuk yang teregistrasi di sistem. Gunakan kolom pencarian untuk menyaring berdasarkan No Registrasi, perihal, pengirim, jenis, atau status. <strong>Klik salah satu baris</strong> untuk melihat tracking surat tersebut.</div>
 
           <span class="filter-chip" id="filterStatusChip" style="display:none;">
             Filter dari Dashboard: <strong class="chip-label"></strong>
@@ -819,6 +819,19 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- =========================================================
+       POP UP TRACKING SURAT (dibuka dengan klik baris di Daftar Surat Masuk)
+  ========================================================== -->
+  <div class="login-modal-overlay" id="trackingPopupOverlay">
+    <div class="login-modal">
+      <div class="login-modal-header">
+        <h2>🔍 Tracking Surat <span id="trackingPopupNoReg" style="color:var(--muted);font-weight:600;"></span></h2>
+        <button class="modal-close" id="btnTutupTrackingPopup" type="button">&times;</button>
+      </div>
+      <div id="trackingPopupBody" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
   <script src="config.js"></script>
   <script src="gas-api.js"></script>
   <script src="app.js"></script>
@@ -842,6 +855,85 @@
         if (document.readyState === 'complete') setTimeout(jalankan, 100);
         else window.addEventListener('load', function () { setTimeout(jalankan, 100); });
       } catch (e) { /* abaikan */ }
+    })();
+  </script>
+  <script>
+    // Pop up tracking: klik baris pada Daftar Surat Masuk -> tampilkan hasil tracking surat tsb.
+    (function () {
+      var tabel = document.getElementById('tabelSemuaSurat');
+      var overlay = document.getElementById('trackingPopupOverlay');
+      var body = document.getElementById('trackingPopupBody');
+      var lbl = document.getElementById('trackingPopupNoReg');
+      var proxyInput = document.getElementById('inputNoRegTracking');
+      var proxyBtn = document.getElementById('btnCariTracking');
+      var proxyHasil = document.getElementById('hasilTracking');
+      if (!tabel || !overlay || !proxyInput || !proxyBtn || !proxyHasil) return;
+
+      var observer = null, debounce = null, timeout = null, token = 0;
+
+      function tutup() {
+        overlay.classList.remove('show');
+        if (observer) { observer.disconnect(); observer = null; }
+        clearTimeout(debounce); clearTimeout(timeout);
+        token++;
+      }
+
+      function tandaiBaris() {
+        var rows = tabel.querySelectorAll('tbody tr');
+        for (var i = 0; i < rows.length; i++) {
+          var tds = rows[i].children;
+          if (tds.length > 2 && !rows[i].hasAttribute('data-noreg')) {
+            var no = (tds[0].textContent || '').trim();
+            if (no) { rows[i].setAttribute('data-noreg', no); rows[i].title = 'Klik untuk melihat tracking surat ini'; }
+          }
+        }
+      }
+
+      function buka(noReg) {
+        var myToken = ++token;
+        lbl.textContent = noReg;
+        body.innerHTML = '<div class="empty-state">Memuat tracking surat...</div>';
+        overlay.classList.add('show');
+
+        if (observer) observer.disconnect();
+        clearTimeout(debounce); clearTimeout(timeout);
+        proxyHasil.innerHTML = '';
+
+        var selesai = function () {
+          if (myToken !== token) return;
+          if (observer) { observer.disconnect(); observer = null; }
+          clearTimeout(timeout);
+          body.innerHTML = proxyHasil.innerHTML.trim()
+            ? proxyHasil.innerHTML
+            : '<div class="empty-state">Data tracking tidak ditemukan.</div>';
+        };
+
+        observer = new MutationObserver(function () {
+          clearTimeout(debounce);
+          debounce = setTimeout(selesai, 350); // tunggu render hasil selesai
+        });
+        observer.observe(proxyHasil, { childList: true, subtree: true, characterData: true });
+        timeout = setTimeout(selesai, 25000); // batas tunggu
+
+        proxyInput.value = noReg;
+        proxyBtn.click();
+      }
+
+      tabel.addEventListener('click', function (e) {
+        if (e.target.closest('button, a, input, select, textarea, label')) return; // kolom Aksi tetap berfungsi
+        var tr = e.target.closest('tr');
+        if (!tr || !tabel.contains(tr) || tr.parentNode.tagName !== 'TBODY') return;
+        if (tr.children.length < 3) return; // baris "Memuat data..." / kosong
+        var noReg = (tr.getAttribute('data-noreg') || tr.children[0].textContent || '').trim();
+        if (noReg) buka(noReg);
+      });
+
+      new MutationObserver(tandaiBaris).observe(tabel, { childList: true, subtree: true });
+      tandaiBaris();
+
+      document.getElementById('btnTutupTrackingPopup').addEventListener('click', tutup);
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) tutup(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.classList.contains('show')) tutup(); });
     })();
   </script>
 </body>
