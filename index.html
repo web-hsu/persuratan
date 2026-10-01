@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SPARTA - Sistem Pelayanan Administrasi, Registrasi Terpadu, dan Arsip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+Pro:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- =========================================================
+       HALAMAN DEPAN (public) - fokus utama: Tracking Surat
+  ========================================================== -->
+  <div id="landingPage" class="landing-wrap">
+
+    <div class="landing-topbar">
+      <div class="brand">
+        <div class="emblem">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 10 L80 24 V52 C80 71 67 86 50 93 C33 86 20 71 20 52 V24 Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/>
+            <path d="M35 73 L50 27 L65 73" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">SPARTA</div>
+          <div class="brand-sub">Sekretariat Daerah Kabupaten</div>
+        </div>
+      </div>
+      <button class="btn btn-gold" id="btnBukaLogin">🔐 Login</button>
+    </div>
+
+    <div class="landing-hero">
+      <div class="kicker">SPARTA — Sistem Pelayanan Administrasi, Registrasi Terpadu, dan Arsip</div>
+      <h1>Lacak Status Surat Anda</h1>
+      <p>Masukkan No Registrasi untuk melihat posisi dan riwayat persetujuan surat secara real-time &mdash; tanpa perlu login.</p>
+
+      <div class="tracking-search-box">
+        <div class="search-row">
+          <input type="text" id="inputNoRegLanding" placeholder="Contoh: 001/SM/2026">
+          <button class="btn btn-primary" id="btnCariLanding">🔍 Cari</button>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.5;">🔒 Demi kerahasiaan, halaman ini hanya menampilkan status &amp; posisi proses secara umum, serta sepenggal perihal (bukan lengkap) untuk membantu Anda memastikan ini surat Anda — catatan disposisi &amp; isi lengkap surat tidak ditampilkan di sini.</div>
+      </div>
+
+      <div id="hasilTrackingLanding" class="landing-result"></div>
+    </div>
+
+    <footer class="app-footer">
+      SPARTA &mdash; Sistem Pelayanan Administrasi, Registrasi Terpadu, dan Arsip &copy; <span id="tahunFooter"></span> &mdash; Sekretariat Daerah
+    </footer>
+  </div>
+
+  <!-- =========================================================
+       MODAL LOGIN (Username / Password)
+  ========================================================== -->
+  <div class="login-modal-overlay" id="loginModalOverlay">
+    <div class="login-modal">
+      <div class="login-modal-header">
+        <h2>🔐 Login Petugas</h2>
+        <button class="modal-close" id="btnTutupLogin">&times;</button>
+      </div>
+      <div class="desc">Khusus petugas internal: Admin TU, Asisten, Staf Ahli, Sekda, Wakil Bupati, Bupati.</div>
+
+      <form id="formLogin">
+        <div class="field-block">
+          <label>Username</label>
+          <input type="text" id="loginUsername" placeholder="Username Anda" required autocomplete="username">
+        </div>
+        <div class="field-block">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="Password Anda" required autocomplete="current-password">
+        </div>
+
+        <div class="warn-box" id="loginErrorBox" style="display:none;margin-bottom:14px;"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="btnSubmitLogin">Masuk</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL EDIT SURAT (Admin TU / Super Admin)
+  ========================================================== -->
+  <div class="login-modal-overlay" id="editSuratModalOverlay">
+    <div class="login-modal" style="max-width:520px;">
+      <div class="login-modal-header">
+        <h2>✏️ Edit Surat Masuk</h2>
+        <button class="modal-close" id="btnTutupEditSurat">&times;</button>
+      </div>
+      <div class="desc">No Registrasi: <strong id="editNoRegistrasiLabel">-</strong> &middot; Jenis Surat: <strong id="editJenisSuratLabel">-</strong> &middot; Tujuan: <strong id="editTujuanSuratLabel">-</strong></div>
+      <div class="info-box" style="margin-bottom:16px;">Jenis Surat &amp; Tujuan Surat tidak bisa diubah di sini karena menentukan alur persetujuan yang sudah dibuat. Untuk mengubahnya, hapus surat ini lalu registrasikan ulang.</div>
+
+      <form id="formEditSurat">
+        <input type="hidden" id="editNoRegistrasi">
+        <div class="form-grid">
+          <div>
+            <label>Surat Dari</label>
+            <select id="editSuratDariTipe" required>
+              <option value="SKPD">SKPD</option>
+              <option value="Umum">Umum</option>
+            </select>
+          </div>
+          <div>
+            <label>Nama Pengirim / SKPD</label>
+            <input type="text" id="editSuratDariNama" required>
+          </div>
+          <div>
+            <label>No Surat</label>
+            <input type="text" id="editNoSurat" required>
+          </div>
+          <div>
+            <label>No WhatsApp Pengirim</label>
+            <input type="text" id="editNoWhatsApp">
+          </div>
+          <div class="full">
+            <label>Perihal</label>
+            <input type="text" id="editPerihal" required>
+          </div>
+          <div class="full">
+            <label>Tindak Lanjut Diteruskan Kepada</label>
+            <input type="text" id="editTindakLanjut">
+          </div>
+
+          <div class="full" id="editUndanganFields" style="display:none;">
+            <div class="card" style="background:#f8fafc;box-shadow:none;margin-bottom:0;">
+              <h2 style="font-size:14px;">Detail Undangan</h2>
+              <div class="form-grid">
+                <div><label>Tanggal Acara</label><input type="date" id="editTanggalAcara"></div>
+                <div><label>Waktu</label><input type="time" id="editWaktuAcara"></div>
+                <div><label>Tempat</label><input type="text" id="editTempatAcara"></div>
+                <div><label>Keterangan</label><input type="text" id="editKeteranganAcara"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="full">
+            <label>Isi Disposisi</label>
+            <textarea id="editIsiDisposisi"></textarea>
+          </div>
+        </div>
+
+        <div class="warn-box" id="editSuratErrorBox" style="display:none;margin:14px 0;"></div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;">
+          <button type="submit" class="btn btn-primary" id="btnSimpanEditSurat">💾 Simpan Perubahan</button>
+          <button type="button" class="btn btn-outline" id="btnBatalEditSurat">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL KONFIRMASI NOTIFIKASI WHATSAPP KE PEMOHON
+  ========================================================== -->
+  <div class="login-modal-overlay" id="notifWaModalOverlay">
+    <div class="login-modal" style="max-width:440px;">
+      <div class="login-modal-header">
+        <h2>📨 Kirim Info ke Pemohon?</h2>
+        <button class="modal-close" id="btnTutupNotifWa">&times;</button>
+      </div>
+      <div class="desc">Tindakan pada surat <strong id="notifWaNoRegistrasi">-</strong> berhasil disimpan. Kirim informasi ini ke pemohon surat melalui WhatsApp?</div>
+
+      <div class="card" style="background:#f8fafc;box-shadow:none;padding:14px 16px;margin-bottom:16px;">
+        <div class="tahap-meta" id="notifWaPreview" style="white-space:pre-line;font-size:12.5px;"></div>
+      </div>
+
+      <div class="warn-box" id="notifWaNoHpWarning" style="display:none;margin-bottom:14px;">Nomor WhatsApp pemohon tidak tersedia pada data surat ini, sehingga tidak bisa dikirim otomatis.</div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-wa" id="btnKirimNotifWa" style="flex:1;justify-content:center;">💬 Kirim via WhatsApp</button>
+        <button type="button" class="btn btn-outline" id="btnAbaikanNotifWa" style="flex:1;justify-content:center;">Abaikan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL KONFIRMASI LEWATI TAHAP YANG BELUM DIPROSES
+  ========================================================== -->
+  <div class="login-modal-overlay" id="skipConfirmModalOverlay">
+    <div class="login-modal" style="max-width:460px;">
+      <div class="login-modal-header">
+        <h2>⚠️ Tahap Sebelumnya Belum Diproses</h2>
+        <button class="modal-close" id="btnTutupSkipConfirm">&times;</button>
+      </div>
+      <div class="desc" id="skipConfirmMessage">-</div>
+
+      <div class="warn-box" style="margin-bottom:16px;">Jika Anda melanjutkan, tahap tersebut akan otomatis ditandai <strong>Disetujui</strong> (dicatat sebagai dilewati, bukan diproses langsung oleh pemegang wewenangnya) — lalu tahap yang Anda tuju akan diproses seperti biasa.</div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-fix" id="btnLanjutkanSkip" style="flex:1;justify-content:center;">Lanjutkan &amp; Tandai Disetujui</button>
+        <button type="button" class="btn btn-outline" id="btnBatalSkip" style="flex:1;justify-content:center;">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL ARSIPKAN SURAT (dari daftar Siap Diarsipkan)
+  ========================================================== -->
+  <div class="login-modal-overlay" id="arsipkanModalOverlay">
+    <div class="login-modal" style="max-width:520px;">
+      <div class="login-modal-header">
+        <h2>🗄️ Arsipkan Surat</h2>
+        <button class="modal-close" id="btnTutupArsipkan">&times;</button>
+      </div>
+      <div class="desc" id="arsipkanInfoSurat">-</div>
+      <input type="hidden" id="arsipNoRegistrasi">
+      <div class="form-grid">
+        <div>
+          <label>Nomor Arsip (opsional)</label>
+          <input type="text" id="arsipNomorArsip" placeholder="Contoh: 001/ARS/2026">
+        </div>
+        <div>
+          <label>Kode Lokasi (opsional)</label>
+          <select id="arsipKodeLokasi">
+            <option value="">-- Belum ditentukan --</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>Kategori Arsip</label>
+          <input type="text" id="arsipKategoriArsip" placeholder="Ketik kategori, contoh: Surat Tugas 2026" autocomplete="off" required>
+        </div>
+        <div class="full">
+          <label>Keterangan (opsional)</label>
+          <textarea id="arsipKeterangan" placeholder="Catatan tambahan"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button type="button" class="btn btn-primary" id="btnSimpanArsip" style="flex:1;justify-content:center;">💾 Simpan Arsip</button>
+        <button type="button" class="btn btn-outline" id="btnBatalArsipkan" style="flex:1;justify-content:center;">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL TAMBAH ARSIP MANUAL (surat lama, tidak ada di sistem persuratan)
+  ========================================================== -->
+  <div class="login-modal-overlay" id="arsipManualModalOverlay">
+    <div class="login-modal" style="max-width:560px;">
+      <div class="login-modal-header">
+        <h2>➕ Tambah Arsip Manual</h2>
+        <button class="modal-close" id="btnTutupArsipManual">&times;</button>
+      </div>
+      <div class="desc">Untuk surat/berkas lama yang belum tercatat di sistem persuratan ini.</div>
+      <div class="form-grid">
+        <div>
+          <label>No Surat (opsional)</label>
+          <input type="text" id="manualNoSurat" placeholder="Contoh: 001/DINSOS/2020">
+        </div>
+        <div>
+          <label>Tanggal Surat (opsional)</label>
+          <input type="date" id="manualTanggalSurat">
+        </div>
+        <div class="full">
+          <label>Perihal</label>
+          <input type="text" id="manualPerihal" placeholder="Perihal / ringkasan isi surat" required>
+        </div>
+        <div>
+          <label>Jenis Surat (opsional)</label>
+          <input type="text" id="manualJenisSurat" placeholder="Contoh: Surat Keputusan">
+        </div>
+        <div>
+          <label>Surat Dari (opsional)</label>
+          <input type="text" id="manualSuratDariNama" placeholder="Nama instansi / perorangan">
+        </div>
+        <div>
+          <label>Nomor Arsip (opsional)</label>
+          <input type="text" id="manualNomorArsip" placeholder="Contoh: 001/ARS/2020">
+        </div>
+        <div>
+          <label>Kode Lokasi (opsional)</label>
+          <select id="manualKodeLokasi">
+            <option value="">-- Belum ditentukan --</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>Kategori Arsip</label>
+          <input type="text" id="manualKategoriArsip" placeholder="Ketik kategori" autocomplete="off" required>
+        </div>
+        <div class="full">
+          <label>Keterangan (opsional)</label>
+          <textarea id="manualKeterangan" placeholder="Catatan tambahan"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button type="button" class="btn btn-primary" id="btnSimpanArsipManual" style="flex:1;justify-content:center;">💾 Simpan Arsip Manual</button>
+        <button type="button" class="btn btn-outline" id="btnBatalArsipManual" style="flex:1;justify-content:center;">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL TAMBAH / EDIT LOKASI PENYIMPANAN ARSIP
+  ========================================================== -->
+  <div class="login-modal-overlay" id="lokasiArsipModalOverlay">
+    <div class="login-modal" style="max-width:460px;">
+      <div class="login-modal-header">
+        <h2 id="lokasiArsipModalTitle">📦 Tambah Lokasi Penyimpanan</h2>
+        <button class="modal-close" id="btnTutupLokasiArsip">&times;</button>
+      </div>
+      <div class="form-grid">
+        <div class="full">
+          <label>Kode Lokasi</label>
+          <input type="text" id="lokasiKodeLokasi" placeholder="Contoh: R1-L2 (Ruang 1 - Lemari 2)">
+        </div>
+        <div class="full">
+          <label>Nama / Deskripsi Lokasi</label>
+          <input type="text" id="lokasiNamaLokasi" placeholder="Contoh: Ruang Arsip Lantai 1, Lemari 2">
+        </div>
+        <div class="full">
+          <label>Kapasitas Maksimal (jumlah berkas)</label>
+          <input type="number" id="lokasiKapasitasMaksimal" placeholder="Contoh: 200" min="1">
+        </div>
+        <div class="full">
+          <label>Keterangan (opsional)</label>
+          <textarea id="lokasiKeterangan" placeholder="Catatan tambahan"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button type="button" class="btn btn-primary" id="btnSimpanLokasiArsip" style="flex:1;justify-content:center;">💾 Simpan Lokasi</button>
+        <button type="button" class="btn btn-outline" id="btnBatalLokasiArsip" style="flex:1;justify-content:center;">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       APLIKASI UTAMA (setelah login berhasil)
+  ========================================================== -->
+  <div id="appPage" style="display:none;">
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <div class="emblem">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50 10 L80 24 V52 C80 71 67 86 50 93 C33 86 20 71 20 52 V24 Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/>
+              <path d="M35 73 L50 27 L65 73" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-title">SPARTA</div>
+            <div class="brand-sub">Sekretariat Daerah Kabupaten</div>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav" id="navTabs">
+          <!-- menu digenerate sesuai role oleh JavaScript -->
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-chip">
+            <div class="avatar" id="avatarInisial">-</div>
+            <div>
+              <span id="userNamaLabel">-</span>
+              <span class="role-tag" id="userRoleLabel">-</span>
+            </div>
+          </div>
+          <button class="btn-keluar" id="btnKembaliLanding">🚪 Keluar</button>
+        </div>
+      </aside>
+
+      <div class="main-area">
+        <div class="topbar-mobile">
+          <button class="hamburger" id="btnToggleSidebar" aria-label="Buka menu">☰</button>
+          <div class="topbar-mobile-title">SPARTA</div>
+        </div>
+
+        <div class="container">
+
+      <!-- ============== DASHBOARD ============== -->
+      <div class="page" id="page-dashboard">
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-box"><div class="num">-</div><div class="label">Total Surat</div></div>
+          <div class="stat-box amber"><div class="num">-</div><div class="label">Dalam Proses</div></div>
+          <div class="stat-box green"><div class="num">-</div><div class="label">Selesai / Disetujui</div></div>
+          <div class="stat-box red"><div class="num">-</div><div class="label">Ditolak / Perlu Perbaikan</div></div>
+          <div class="stat-box" style="border-left-color:var(--navy-light);"><div class="num" style="color:var(--navy-light);">-</div><div class="label">Informasi (Undangan/Lainnya)</div></div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="card">
+            <h2>Surat Masuk per Bulan</h2>
+            <div class="desc">6 bulan terakhir.</div>
+            <div class="chart-box" id="chartBulanSurat"><div class="empty-state">Memuat data...</div></div>
+          </div>
+
+          <div class="card">
+            <h2>Distribusi Jenis Surat</h2>
+            <div class="desc">Proporsi tiap jenis surat.</div>
+            <div class="chart-box" id="chartJenisSurat"><div class="empty-state">Memuat data...</div></div>
+          </div>
+
+          <div class="card">
+            <h2>Tahap Menunggu Persetujuan</h2>
+            <div class="desc">Tahap mana yang saat ini paling banyak menumpuk.</div>
+            <div class="chart-box" id="chartTahapMenunggu"><div class="empty-state">Memuat data...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== REGISTRASI SURAT MASUK (Admin TU) ============== -->
+      <div class="page" id="page-registrasi">
+        <div class="card">
+          <h2>Registrasi Surat Masuk</h2>
+          <div class="desc">Nomor registrasi akan dibuat otomatis oleh sistem setelah surat disimpan.</div>
+
+          <form id="formRegistrasi">
+            <div class="form-grid">
+              <div>
+                <label>Tanggal Surat Masuk</label>
+                <input type="text" value="Otomatis (hari ini)" disabled>
+              </div>
+              <div>
+                <label>No Registrasi</label>
+                <input type="text" value="Akan digenerate otomatis" disabled>
+              </div>
+
+              <div>
+                <label>Surat Dari</label>
+                <select id="suratDariTipe" required>
+                  <option value="">-- Pilih --</option>
+                  <option value="SKPD">SKPD</option>
+                  <option value="Umum">Umum</option>
+                </select>
+              </div>
+              <div>
+                <label>Nama Pengirim / SKPD</label>
+                <input type="text" id="suratDariNama" placeholder="Nama instansi / perorangan" autocomplete="off" required>
+              </div>
+
+              <div>
+                <label>No Surat</label>
+                <input type="text" id="noSurat" placeholder="Contoh: 001/DINSOS/2026" required>
+              </div>
+              <div>
+                <label>Jenis Surat</label>
+                <select id="jenisSurat" required>
+                  <option value="">-- Pilih Jenis Surat --</option>
+                </select>
+              </div>
+
+              <div class="full">
+                <label>Perihal</label>
+                <input type="text" id="perihal" placeholder="Perihal / ringkasan isi surat" required>
+              </div>
+
+              <div>
+                <label>Tindak Lanjut Diteruskan Kepada</label>
+                <input type="text" id="tindakLanjut" placeholder="Contoh: Kabag Umum / Asisten I">
+              </div>
+              <div>
+                <label>No WhatsApp Pengirim</label>
+                <input type="text" id="noWhatsApp" placeholder="Contoh: 081234567890">
+              </div>
+
+              <!-- Tombol pilihan tipe tracking - menentukan checklist mana yang tampil -->
+              <div class="full">
+                <label>Tipe Tracking Surat</label>
+                <div class="toggle-group">
+                  <button type="button" class="toggle-btn" id="btnTipePersetujuan" data-tipe="PERSETUJUAN">✅ Perlu Persetujuan</button>
+                  <button type="button" class="toggle-btn" id="btnTipeInformasi" data-tipe="INFORMASI">ℹ️ Hanya Informasi</button>
+                </div>
+              </div>
+
+              <!-- Alur Persetujuan (centang manual) - muncul jika tipe tracking = Perlu Persetujuan -->
+              <div class="full" id="alurPersetujuanBox" style="display:none;">
+                <label>Alur Persetujuan (centang tahap yang berlaku, bisa lebih dari satu)</label>
+                <div class="checkbox-group">
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Paraf Asisten"> Paraf Asisten</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Paraf Staf Ahli"> Paraf Staf Ahli</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Paraf Sekda"> Paraf Sekda</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Tanda Tangan Sekda"> Tanda Tangan Sekda</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Tanda Tangan Wakil Bupati"> Tanda Tangan Wakil Bupati</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Tanda Tangan Bupati"> Tanda Tangan Bupati</label>
+                </div>
+              </div>
+
+              <!-- Tujuan Surat (centang manual, murni informasi) - muncul jika tipe tracking = Hanya Informasi -->
+              <div class="full" id="tujuanInformasiBox" style="display:none;">
+                <label>Tujuan Surat (centang, bisa lebih dari satu — murni informasi, tanpa perlu persetujuan)</label>
+                <div class="checkbox-group">
+                  <label class="checkbox-item"><input type="checkbox" class="chk-tujuan" value="Sekda"> Sekda</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-tujuan" value="Wakil Bupati"> Wakil Bupati</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-tujuan" value="Bupati"> Bupati</label>
+                </div>
+              </div>
+
+              <div class="full" id="alurInfoBox" style="display:none;">
+                <label>Pratinjau Alur Persetujuan Terpilih</label>
+                <div class="field-row" id="alurInfoText"></div>
+              </div>
+
+              <!-- Field khusus Undangan -->
+              <div class="full" id="undanganFields" style="display:none;">
+                <div class="card" style="background:#f8fafc;box-shadow:none;margin-bottom:0;">
+                  <h2 style="font-size:14px;">Detail Undangan</h2>
+                  <div class="form-grid">
+                    <div><label>Tanggal Acara</label><input type="date" id="tanggalAcara"></div>
+                    <div><label>Waktu</label><input type="time" id="waktuAcara"></div>
+                    <div><label>Tempat</label><input type="text" id="tempatAcara" placeholder="Lokasi acara"></div>
+                    <div><label>Keterangan</label><input type="text" id="keteranganAcara" placeholder="Catatan tambahan"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="full">
+                <label>Isi Disposisi</label>
+                <textarea id="isiDisposisi" placeholder="Catatan disposisi awal (opsional)"></textarea>
+              </div>
+            </div>
+
+            <div style="margin-top:18px;">
+              <button type="submit" class="btn btn-primary" id="btnSimpanRegistrasi">💾 Simpan Registrasi</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============== TRACKING SURAT (dalam aplikasi) ============== -->
+      <div class="page" id="page-tracking">
+        <div class="card">
+          <h2>Tracking Surat</h2>
+          <div class="desc">Masukkan No Registrasi untuk melihat posisi dan riwayat persetujuan surat.</div>
+          <div class="search-row">
+            <input type="text" id="inputNoRegTracking" placeholder="Contoh: 001/SM/2026">
+            <button class="btn btn-primary" id="btnCariTracking">🔍 Cari</button>
+          </div>
+        </div>
+        <div id="hasilTracking"></div>
+      </div>
+
+      <!-- ============== UPDATE DISPOSISI (PIMPINAN / SUPER ADMIN) ============== -->
+      <div class="page" id="page-disposisi">
+        <div class="card">
+          <h2>Cari &amp; Proses Surat</h2>
+          <div class="desc">Masukkan No Registrasi secara manual, atau klik salah satu surat pada daftar "Menunggu Persetujuan Saya" di bawah.</div>
+          <div class="search-row">
+            <input type="text" id="inputNoRegDisposisi" placeholder="Contoh: 001/SM/2026">
+            <button class="btn btn-primary" id="btnCariDisposisi">🔍 Cari</button>
+          </div>
+        </div>
+        <div id="hasilDisposisi"></div>
+
+        <div class="card">
+          <h2>Menunggu Persetujuan Saya <span class="tahap-meta" id="jumlahKotakMasuk"></span></h2>
+          <div class="desc">Diurutkan dari surat yang paling lama menunggu. Klik salah satu untuk memproses.</div>
+          <div id="kotakMasukSaya"><div class="empty-state">Memuat data...</div></div>
+        </div>
+      </div>
+
+      <!-- ============== DAFTAR SURAT MASUK (SEMUA DATA) ============== -->
+      <div class="page" id="page-semuasurat">
+        <div class="card">
+          <h2>Daftar Surat Masuk</h2>
+          <div class="desc">Menampilkan seluruh data surat masuk yang teregistrasi di sistem. Gunakan kolom pencarian untuk menyaring berdasarkan No Registrasi, perihal, pengirim, jenis, atau status.</div>
+
+          <span class="filter-chip" id="filterStatusChip" style="display:none;">
+            Filter dari Dashboard: <strong class="chip-label"></strong>
+            <button type="button" id="btnHapusFilterStatus">&times;</button>
+          </span>
+
+          <div class="filter-row">
+            <div class="field" style="flex:1;min-width:220px;">
+              <label>Cari Cepat</label>
+              <input type="text" id="cariSemuaSurat" placeholder="Ketik No Registrasi, perihal, pengirim, jenis, atau status...">
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-outline" id="btnRefreshSemuaSurat">🔄 Muat Ulang</button>
+            </div>
+            <div class="field" style="margin-left:auto;align-self:end;">
+              <span class="tahap-meta" id="jumlahSemuaSurat"></span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="tabelSemuaSurat">
+              <thead>
+                <tr>
+                  <th>No Registrasi</th><th>Tanggal</th><th>Dari</th><th>No Surat</th>
+                  <th>Perihal</th><th>Jenis</th><th>Tujuan</th><th>Status</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="9" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== SURAT SELESAI ============== -->
+      <div class="page" id="page-suratselesai">
+        <div class="card">
+          <h2>Surat Selesai</h2>
+          <div class="desc">Surat yang seluruh tahapnya sudah disetujui, atau surat informasi (Undangan/Lainnya) yang tidak memerlukan persetujuan. Menampilkan tanggal selesai dan status pengambilan surat.</div>
+
+          <div class="filter-row">
+            <div class="field" style="flex:1;min-width:220px;">
+              <label>Cari Cepat</label>
+              <input type="text" id="cariSuratSelesai" placeholder="Ketik No Registrasi, perihal, atau nama penerima...">
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-outline" id="btnRefreshSuratSelesai">🔄 Muat Ulang</button>
+            </div>
+            <div class="field" style="margin-left:auto;align-self:end;">
+              <span class="tahap-meta" id="jumlahSuratSelesai"></span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="tabelSuratSelesai">
+              <thead>
+                <tr>
+                  <th>No Registrasi</th><th>Perihal</th><th>Jenis</th><th>Status</th>
+                  <th>Tanggal Selesai</th><th>Pengambilan</th><th>Nama Penerima</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="8" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== ARSIP DOKUMEN ============== -->
+      <div class="page" id="page-arsip">
+        <div class="card">
+          <h2>Surat Siap Diarsipkan</h2>
+          <div class="desc">Surat yang sudah selesai, belum diarsipkan, dan <strong>belum diambil</strong> oleh pemohon (surat yang sudah ada tanda terima tidak muncul di sini — dokumen fisiknya sudah di tangan pemohon). Diurutkan dari yang paling lama selesai.</div>
+          <div class="table-wrap">
+            <table id="tabelSiapArsip">
+              <thead>
+                <tr>
+                  <th>No Registrasi</th><th>Perihal</th><th>Jenis</th><th>Status</th><th>Tanggal</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="6" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+            <div>
+              <h2>Daftar Arsip</h2>
+              <div class="desc">Semua surat yang sudah diarsipkan (dari sistem maupun input manual).</div>
+            </div>
+            <button class="btn btn-primary" id="btnBukaArsipManual">➕ Tambah Arsip Manual</button>
+          </div>
+
+          <div class="filter-row">
+            <div class="field" style="flex:1;min-width:220px;">
+              <label>Cari Cepat</label>
+              <input type="text" id="cariArsip" placeholder="Ketik No Registrasi, perihal, nomor arsip, kategori, atau lokasi...">
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-outline" id="btnRefreshArsip">🔄 Muat Ulang</button>
+            </div>
+            <div class="field" style="margin-left:auto;align-self:end;">
+              <span class="tahap-meta" id="jumlahArsip"></span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="tabelArsip">
+              <thead>
+                <tr>
+                  <th>No Registrasi</th><th>Nomor Arsip</th><th>Perihal</th><th>Kategori</th>
+                  <th>Kode Lokasi</th><th>Tanggal Arsip</th><th>Sumber</th><th>Diarsipkan Oleh</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="9" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== CARI DOKUMEN (lokasi penyimpanan) ============== -->
+      <div class="page" id="page-carilokasi">
+        <div class="card">
+          <h2>🔎 Cari Dokumen</h2>
+          <div class="desc">Cari dokumen yang sudah diarsipkan untuk mengetahui di lokasi mana fisiknya disimpan.</div>
+
+          <div class="filter-row">
+            <div class="field" style="flex:1;min-width:260px;">
+              <label>Kata Kunci</label>
+              <input type="text" id="cariLokasiKeyword" placeholder="Ketik No Registrasi, perihal, nomor arsip, atau kategori...">
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary" id="btnCariLokasi">🔎 Cari</button>
+            </div>
+          </div>
+
+          <div id="hasilCariLokasi" style="margin-top:16px;"></div>
+        </div>
+      </div>
+
+      <!-- ============== DASHBOARD ARSIP ============== -->
+      <div class="page" id="page-dashboardarsip">
+        <div class="stats-grid" id="statsGridArsip">
+          <div class="stat-box"><div class="num">-</div><div class="label">Total Arsip</div></div>
+          <div class="stat-box amber"><div class="num">-</div><div class="label">Siap Diarsipkan</div></div>
+          <div class="stat-box"><div class="num">-</div><div class="label">Jumlah Lokasi</div></div>
+          <div class="stat-box green"><div class="num">-</div><div class="label">Kapasitas Terpakai</div></div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="card">
+            <h2>Jumlah Arsip per Kategori</h2>
+            <div class="desc">Diurutkan dari kategori dengan arsip terbanyak.</div>
+            <div class="chart-box" id="chartKategoriArsip"><div class="empty-state">Memuat data...</div></div>
+          </div>
+
+          <div class="card">
+            <h2>Kapasitas per Lokasi Penyimpanan</h2>
+            <div class="desc">Diurutkan dari lokasi yang paling penuh.</div>
+            <div class="chart-box" id="chartLokasiArsip"><div class="empty-state">Memuat data...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== LOKASI PENYIMPANAN ARSIP ============== -->
+      <div class="page" id="page-lokasiarsip">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+            <div>
+              <h2>Lokasi Penyimpanan Arsip</h2>
+              <div class="desc">Kode lokasi fisik penyimpanan berkas beserta estimasi kapasitasnya.</div>
+            </div>
+            <button class="btn btn-primary" id="btnBukaTambahLokasi">➕ Tambah Lokasi</button>
+          </div>
+          <div class="table-wrap">
+            <table id="tabelLokasiArsip">
+              <thead>
+                <tr>
+                  <th>Kode Lokasi</th><th>Nama Lokasi</th><th>Kapasitas</th><th>Terpakai</th><th>Sisa</th><th>Keterangan</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="7" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== LAPORAN HARIAN & BULANAN ============== -->
+      <div class="page" id="page-laporan">
+        <div class="card">
+          <h2>Laporan Harian</h2>
+          <div class="desc">Ringkasan aktivitas persuratan hari ini.</div>
+          <div class="stats-grid" id="statsHarian">
+            <div class="stat-box"><div class="num">-</div><div class="label">Surat Masuk Hari Ini</div></div>
+            <div class="stat-box green"><div class="num">-</div><div class="label">Selesai Hari Ini</div></div>
+            <div class="stat-box amber"><div class="num">-</div><div class="label">Masih Dalam Proses</div></div>
+          </div>
+          <div class="table-wrap">
+            <table id="tabelMasihProses">
+              <thead><tr><th>No Registrasi</th><th>Perihal</th><th>Jenis</th><th>Menunggu</th></tr></thead>
+              <tbody><tr><td colspan="4" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+          <div style="margin-top:14px;">
+            <button class="btn btn-gold" id="btnExportHarianPdf">📄 Export PDF Laporan Harian</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Laporan Bulanan / Filter</h2>
+          <div class="desc">Filter berdasarkan bulan, tahun, dan jenis surat, lalu ekspor ke PDF atau Excel.</div>
+
+          <div class="filter-row">
+            <div class="field">
+              <label>Bulan</label>
+              <select id="filterBulan">
+                <option value="">Semua Bulan</option>
+                <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tahun</label>
+              <select id="filterTahun"></select>
+            </div>
+            <div class="field">
+              <label>Jenis Surat</label>
+              <select id="filterJenis"><option value="">Semua Jenis</option></select>
+            </div>
+            <div class="field">
+              <button class="btn btn-outline" id="btnTerapkanFilter">Terapkan Filter</button>
+            </div>
+            <div class="field" style="margin-left:auto;display:flex;gap:8px;">
+              <button class="btn btn-gold" id="btnExportPdf">📄 Export PDF</button>
+              <button class="btn btn-gold" id="btnExportExcel">📊 Export Excel</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="tabelDaftar">
+              <thead>
+                <tr>
+                  <th>No Registrasi</th><th>Tanggal</th><th>Dari</th><th>No Surat</th>
+                  <th>Perihal</th><th>Jenis</th><th>Tujuan</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="8" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="config.js"></script>
+  <script src="gas-api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
