@@ -16,6 +16,61 @@
   var MAKS_ULANG_BACA = 2;      // jumlah pengulangan tambahan untuk fungsi get*
   var JEDA_ULANG_MS   = 1500;   // jeda antar pengulangan (dikali nomor percobaan)
 
+  /* ---------- Percepatan: cache "tampil dulu, segarkan kemudian" ----------
+   * Untuk fungsi BACA di daftar bawah, hasil terakhir (sessionStorage, hilang saat tab ditutup)
+   * langsung ditampilkan seketika, sementara data terbaru diambil di latar belakang.
+   * Layar hanya diperbarui lagi bila isi datanya memang berbeda.
+   * Setiap aksi TULIS yang berhasil (registrasi, setuju, edit, hapus, dst.) menghapus cache ini
+   * agar tidak pernah menampilkan data usang setelah perubahan.
+   */
+  var FUNGSI_CACHE = {
+    getAllSurat: 1, getDashboardStats: 1, getSuratMenungguPersetujuan: 1, getSuratSelesai: 1,
+    getSuratSiapArsip: 1, getDaftarArsip: 1, getDashboardArsipStats: 1, getLaporanHarian: 1,
+    getMasterSKPD: 1, getJenisSuratList: 1, getMasterKategoriArsip: 1, getDaftarLokasiArsip: 1,
+    getTrackingByNoRegistrasi: 1, getTrackingPublik: 1
+  };
+  var AWALAN_CACHE = 'sparta_swr:';
+  var UMUR_MAKS_CACHE_MS = 6 * 60 * 60 * 1000;
+  var sedangJalan = {};   // permintaan baca identik yang sedang berjalan -> digabung jadi satu
+
+  function kunciCache(nama, args) { return AWALAN_CACHE + nama + ':' + JSON.stringify(args); }
+  function bacaCache(kunci) {
+    try {
+      var t = sessionStorage.getItem(kunci);
+      if (!t) return null;
+      var o = JSON.parse(t);
+      if (!o || Date.now() - o.t > UMUR_MAKS_CACHE_MS) return null;
+      return o;
+    } catch (e) { return null; }
+  }
+  function tulisCache(kunci, data) {
+    try { sessionStorage.setItem(kunci, JSON.stringify({ t: Date.now(), d: data })); }
+    catch (e) { hapusCache(); } // penuh -> kosongkan agar tidak error
+  }
+  function hapusCache() {
+    try {
+      for (var i = sessionStorage.length - 1; i >= 0; i--) {
+        var k = sessionStorage.key(i);
+        if (k && k.indexOf(AWALAN_CACHE) === 0) sessionStorage.removeItem(k);
+      }
+    } catch (e) { /* abaikan */ }
+  }
+
+  /* ---------- Pemanasan koneksi ke server (mengurangi jeda saat buka aplikasi) ---------- */
+  (function pemanasan() {
+    try {
+      var url = (window.SPARTA_CONFIG || {}).API_URL;
+      if (!url || url.indexOf('GANTI_DENGAN') !== -1) return;
+      ['https://script.google.com', 'https://script.googleusercontent.com'].forEach(function (o) {
+        var l = document.createElement('link');
+        l.rel = 'preconnect'; l.href = o; l.crossOrigin = '';
+        document.head.appendChild(l);
+      });
+      // Bangunkan Web App (cold start) sambil pengguna melihat halaman / mengetik login.
+      fetch(url, { method: 'GET', mode: 'no-cors', redirect: 'follow' }).catch(function () {});
+    } catch (e) { /* abaikan */ }
+  })();
+
   /* ---------- Kotak pesan galat (kanan bawah) ---------- */
   var terakhir = { pesan: '', waktu: 0 };
   function tampilkanGalat(nama, pesan) {
@@ -73,7 +128,7 @@
           if (typeof onOk === 'function') onOk(res.data);
         } else {
           // Galat resmi dari server (mis. sesi habis): tidak diulang.
-          gagal((res && res.message) || 'Terjadi kesalahan pada server.');
+          gagal((res && res.message) || 'Terjadi kesalahan pada server.', false);
         }
       })
       .catch(function (e) {
@@ -86,7 +141,7 @@
           setTimeout(function () { kirim(nama, args, url, percobaan + 1, onOk, gagal); },
                      JEDA_ULANG_MS * (percobaan + 1));
         } else {
-          gagal(pesan);
+          gagal(pesan, ulang); // ulang=true berarti masalah jaringan/respons tidak valid
         }
       });
   }
@@ -102,10 +157,13 @@
         return function () {
           var args = Array.prototype.slice.call(arguments);
           var url = (window.SPARTA_CONFIG || {}).API_URL;
+          var bacaan = /^get/.test(nama);
+          var pakaiCache = !!FUNGSI_CACHE[nama];
+          var kunci = bacaan ? kunciCache(nama, args) : null;
 
-          var gagal = function (pesan) {
+          var gagal = function (pesan, senyap) {
             console.error('[API] ' + nama + ':', pesan);
-            tampilkanGalat(nama, pesan);
+            if (!senyap) tampilkanGalat(nama, pesan);
             var err = new Error(pesan);
             if (typeof onFail === 'function') onFail(err);
           };
@@ -114,7 +172,44 @@
             gagal('API_URL belum diisi pada config.js');
             return;
           }
-          kirim(nama, args, url, 0, onOk, gagal);
+
+          // 1) Tampilkan data tersimpan seketika (bila ada).
+          var cache = pakaiCache ? bacaCache(kunci) : null;
+          var sudahTampil = false, jsonTampil = null;
+          if (cache) {
+            sudahTampil = true;
+            jsonTampil = JSON.stringify(cache.d);
+            if (typeof onOk === 'function') {
+              try { onOk(cache.d); } catch (e) { console.error(e); }
+            }
+          }
+
+          // 2) Ambil data terbaru. Permintaan baca yang identik digabung menjadi satu.
+          var sukses = function (data) {
+            if (bacaan) {
+              if (pakaiCache) tulisCache(kunci, data);
+              // sudah tampil dari cache & isinya sama -> tidak perlu menggambar ulang
+              if (sudahTampil && JSON.stringify(data) === jsonTampil) return;
+            } else {
+              hapusCache(); // setelah aksi tulis berhasil, buang semua cache baca
+            }
+            if (typeof onOk === 'function') onOk(data);
+          };
+          var galat = function (pesan, jaringan) {
+            // Data cache sudah tampil & yang gagal hanya penyegaran (jaringan): diam saja.
+            if (sudahTampil && jaringan) { console.warn('[API] ' + nama + ' (penyegaran gagal):', pesan); return; }
+            gagal(pesan);
+          };
+
+          if (bacaan) {
+            if (sedangJalan[kunci]) { sedangJalan[kunci].push({ ok: sukses, gagal: galat }); return; }
+            sedangJalan[kunci] = [{ ok: sukses, gagal: galat }];
+            kirim(nama, args, url, 0,
+              function (d) { var l = sedangJalan[kunci] || []; delete sedangJalan[kunci]; l.forEach(function (x) { x.ok(d); }); },
+              function (p, jar) { var l = sedangJalan[kunci] || []; delete sedangJalan[kunci]; l.forEach(function (x) { x.gagal(p, jar); }); });
+          } else {
+            kirim(nama, args, url, 0, sukses, galat);
+          }
         };
       }
     });
