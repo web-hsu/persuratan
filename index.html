@@ -899,21 +899,22 @@
         clearTimeout(debounce); clearTimeout(timeout);
         proxyHasil.innerHTML = '';
 
-        var selesai = function () {
+        // Cermin langsung: setiap kali hasil tracking berubah (dari "Mencari data..." sampai
+        // hasil akhir tiba dari server), isi pop up ikut diperbarui.
+        var salin = function () {
           if (myToken !== token) return;
-          if (observer) { observer.disconnect(); observer = null; }
-          clearTimeout(timeout);
-          body.innerHTML = proxyHasil.innerHTML.trim()
-            ? proxyHasil.innerHTML
-            : '<div class="empty-state">Data tracking tidak ditemukan.</div>';
+          var isi = proxyHasil.innerHTML.trim();
+          if (isi) body.innerHTML = isi;
         };
 
-        observer = new MutationObserver(function () {
-          clearTimeout(debounce);
-          debounce = setTimeout(selesai, 350); // tunggu render hasil selesai
-        });
+        observer = new MutationObserver(salin);
         observer.observe(proxyHasil, { childList: true, subtree: true, characterData: true });
-        timeout = setTimeout(selesai, 25000); // batas tunggu
+        timeout = setTimeout(function () {
+          if (myToken !== token) return;
+          if (/Mencari data/i.test(body.textContent)) {
+            body.innerHTML = '<div class="empty-state">Server belum merespons. Tutup lalu klik baris ini lagi.</div>';
+          }
+        }, 30000);
 
         proxyInput.value = noReg;
         proxyBtn.click();
