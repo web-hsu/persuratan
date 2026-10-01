@@ -543,7 +543,6 @@
             <button class="btn btn-primary" id="btnCariDisposisi">🔍 Cari</button>
           </div>
         </div>
-        <div id="hasilDisposisi"></div>
 
         <div class="card">
           <h2>Menunggu Persetujuan Saya <span class="tahap-meta" id="jumlahKotakMasuk"></span></h2>
@@ -820,6 +819,23 @@
   <div class="toast" id="toast"></div>
 
   <!-- =========================================================
+       POP UP PROSES PERSETUJUAN (surat dari "Menunggu Persetujuan Saya" / pencarian No Registrasi)
+       Catatan: elemen #hasilDisposisi dipindah ke sini; app.js tetap mengisinya seperti biasa.
+  ========================================================== -->
+  <div class="login-modal-overlay" id="disposisiPopupOverlay">
+    <div class="login-modal disposisi-modal" role="dialog" aria-modal="true" aria-labelledby="disposisiPopupJudul">
+      <div class="disposisi-modal-header">
+        <div>
+          <h2 id="disposisiPopupJudul">📝 Proses Persetujuan Surat</h2>
+          <div class="sub" id="disposisiPopupNoReg"></div>
+        </div>
+        <button class="modal-close" id="btnTutupDisposisiPopup" type="button" aria-label="Tutup">&times;</button>
+      </div>
+      <div id="hasilDisposisi" class="disposisi-body"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
        POP UP TRACKING SURAT (dibuka dengan klik baris di Daftar Surat Masuk)
   ========================================================== -->
   <div class="login-modal-overlay" id="trackingPopupOverlay">
@@ -855,6 +871,43 @@
         if (document.readyState === 'complete') setTimeout(jalankan, 100);
         else window.addEventListener('load', function () { setTimeout(jalankan, 100); });
       } catch (e) { /* abaikan */ }
+    })();
+  </script>
+    <script>
+    // Pop up Proses Persetujuan: setiap kali app.js mengisi #hasilDisposisi, tampilkan sebagai pop up.
+    (function () {
+      var hasil = document.getElementById('hasilDisposisi');
+      var overlay = document.getElementById('disposisiPopupOverlay');
+      var lbl = document.getElementById('disposisiPopupNoReg');
+      var input = document.getElementById('inputNoRegDisposisi');
+      if (!hasil || !overlay) return;
+
+      function sinkron() {
+        var kosong = !hasil.children.length && !hasil.textContent.trim();
+        if (kosong) {
+          overlay.classList.remove('show');
+          document.body.classList.remove('disposisi-terbuka');
+        } else {
+          if (!overlay.classList.contains('show')) hasil.scrollTop = 0;
+          overlay.classList.add('show');
+          document.body.classList.add('disposisi-terbuka');
+          lbl.textContent = input && input.value ? 'No. Registrasi ' + input.value.trim() : '';
+        }
+      }
+
+      function tutup() { hasil.innerHTML = ''; sinkron(); }
+
+      new MutationObserver(sinkron).observe(hasil, { childList: true, subtree: true, characterData: true });
+      document.getElementById('btnTutupDisposisiPopup').addEventListener('click', tutup);
+      // Klik latar gelap SENGAJA tidak menutup, agar catatan yang sedang diketik tidak hilang tak sengaja.
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape' || !overlay.classList.contains('show')) return;
+        var a = document.activeElement;
+        if (a && /^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)) return; // jangan tutup saat sedang mengetik
+        // jangan tutup bila modal lain (konfirmasi, notifikasi WA) sedang tampil di atasnya
+        if (document.querySelector('#notifWaModalOverlay.show, #skipConfirmModalOverlay.show')) return;
+        tutup();
+      });
     })();
   </script>
   <script>
