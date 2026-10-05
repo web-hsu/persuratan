@@ -558,7 +558,7 @@
       <div class="page" id="page-semuasurat">
         <div class="card">
           <h2>Daftar Surat Masuk</h2>
-          <div class="desc">Secara default hanya menampilkan surat pada bulan dan tahun berjalan. Gunakan filter Bulan/Tahun untuk memilih periode lain. Gunakan kolom pencarian untuk menyaring berdasarkan No Registrasi, perihal, pengirim, jenis, atau status. <strong>Klik salah satu baris</strong> untuk melihat tracking surat tersebut.</div>
+          <div class="desc">Menampilkan seluruh data surat masuk yang teregistrasi di sistem. Gunakan kolom pencarian untuk menyaring berdasarkan No Registrasi, perihal, pengirim, jenis, atau status. <strong>Klik salah satu baris</strong> untuk melihat tracking surat tersebut.</div>
 
           <span class="filter-chip" id="filterStatusChip" style="display:none;">
             Filter dari Dashboard: <strong class="chip-label"></strong>
@@ -566,28 +566,21 @@
           </span>
 
           <div class="filter-row">
-            <div class="field" style="min-width:150px;">
-              <label>Bulan</label>
-              <select id="filterBulanSemuaSurat"></select>
-            </div>
-            <div class="field" style="min-width:130px;">
-              <label>Tahun</label>
-              <select id="filterTahunSemuaSurat"></select>
-            </div>
             <div class="field" style="flex:1;min-width:220px;">
               <label>Cari Cepat</label>
               <input type="text" id="cariSemuaSurat" placeholder="Ketik No Registrasi, perihal, pengirim, jenis, atau status...">
+            </div>
+            <div class="field">
+              <label for="filterBulanSemuaSurat">Filter Bulan</label>
+              <select id="filterBulanSemuaSurat"><option value="">Semua Bulan</option></select>
             </div>
             <div class="field">
               <label>&nbsp;</label>
               <button class="btn btn-outline" id="btnRefreshSemuaSurat">🔄 Muat Ulang</button>
             </div>
             <div class="field" style="margin-left:auto;align-self:end;">
-              <span class="tahap-meta" id="jumlahSemuaSurat"></span>
+              <span class="tahap-meta" id="jumlahSemuaSurat"></span> <span class="tahap-meta" id="infoFilterBulanSemuaSurat"></span>
             </div>
-          </div>
-          <div class="desc" style="margin-top:-4px;">
-            Secara default hanya menampilkan surat pada bulan berjalan. Pilih <strong>Semua Bulan</strong> jika ingin melihat seluruh periode.
           </div>
 
           <div class="table-wrap">
@@ -1027,6 +1020,72 @@
       document.getElementById('btnTutupTrackingPopup').addEventListener('click', tutup);
       overlay.addEventListener('click', function (e) { if (e.target === overlay) tutup(); });
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.classList.contains('show')) tutup(); });
+    })();
+  </script>
+  <script>
+    // Filter Bulan pada Daftar Surat Masuk (berjalan di browser dari data yang sudah dimuat,
+    // jadi instan dan tidak menambah beban server). Pilihan bulan dibuat otomatis dari kolom Tanggal.
+    (function () {
+      var tabel = document.getElementById('tabelSemuaSurat');
+      var sel = document.getElementById('filterBulanSemuaSurat');
+      var info = document.getElementById('infoFilterBulanSemuaSurat');
+      if (!tabel || !sel) return;
+      var tbody = tabel.querySelector('tbody');
+      var NAMA = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+      var st = document.createElement('style');
+      st.textContent = '#tabelSemuaSurat tbody tr.row-bulan-hide{display:none !important;}';
+      document.head.appendChild(st);
+
+      function kunciBulan(teks) { // "5/10/2026" (d/M/yyyy) -> "2026-10"
+        var m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(teks || '');
+        return m ? (m[3] + '-' + Number(m[2])) : '';
+      }
+
+      function barisData() {
+        var out = [], rows = tbody.querySelectorAll('tr');
+        for (var i = 0; i < rows.length; i++) if (rows[i].children.length >= 3) out.push(rows[i]);
+        return out;
+      }
+
+      function bangunOpsi() {
+        var rows = barisData(), ada = {}, i, k;
+        for (i = 0; i < rows.length; i++) {
+          k = kunciBulan(rows[i].children[1].textContent);
+          if (k) ada[k] = true;
+        }
+        var keys = Object.keys(ada).sort(function (a, b) {
+          var pa = a.split('-'), pb = b.split('-');
+          return (Number(pb[0]) - Number(pa[0])) || (Number(pb[1]) - Number(pa[1]));
+        });
+        var dipilih = sel.value;
+        var html = '<option value="">Semua Bulan</option>';
+        keys.forEach(function (key) {
+          var p = key.split('-');
+          html += '<option value="' + key + '">' + NAMA[Number(p[1]) - 1] + ' ' + p[0] + '</option>';
+        });
+        sel.innerHTML = html;
+        sel.value = (dipilih && ada[dipilih]) ? dipilih : '';
+      }
+
+      function terapkan() {
+        var rows = barisData(), v = sel.value, tampil = 0;
+        for (var i = 0; i < rows.length; i++) {
+          var cocok = !v || kunciBulan(rows[i].children[1].textContent) === v;
+          rows[i].classList.toggle('row-bulan-hide', !cocok);
+          if (cocok) tampil++;
+        }
+        if (info) info.textContent = v ? ('(' + tampil + ' surat pada ' + sel.options[sel.selectedIndex].text + ')') : '';
+      }
+
+      var t = null;
+      new MutationObserver(function () { // tabel diisi ulang oleh app.js (muat data / muat ulang / cari)
+        clearTimeout(t);
+        t = setTimeout(function () { bangunOpsi(); terapkan(); }, 60);
+      }).observe(tbody, { childList: true });
+
+      sel.addEventListener('change', terapkan);
+      bangunOpsi(); terapkan();
     })();
   </script>
 </body>
