@@ -4,13 +4,13 @@
   <base target="_top">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SPARTA - Sistem Pelayanan Administrasi, Registrasi Terpadu, dan Arsip</title>
+  <title>SPARTA - Sistem Pelayanan Administrasi Persuratan</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+Pro:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20261016">
 </head>
 <body>
 
@@ -29,14 +29,14 @@
         </div>
         <div>
           <div class="brand-title">SPARTA</div>
-          <div class="brand-sub">Sekretariat Daerah Kabupaten</div>
+          <div class="brand-sub">Sistem Pelayanan Administrasi Persuratan</div>
         </div>
       </div>
       <button class="btn btn-gold" id="btnBukaLogin">🔐 Login</button>
     </div>
 
     <div class="landing-hero">
-      <div class="kicker">SPARTA — Sistem Pelayanan Administrasi, Registrasi Terpadu, dan Arsip</div>
+      <div class="kicker">SPARTA — Sistem Pelayanan Administrasi Persuratan</div>
       <h1>Lacak Status Surat Anda</h1>
       <p>Masukkan No Registrasi untuk melihat posisi dan riwayat persetujuan surat secara real-time &mdash; tanpa perlu login.</p>
 
@@ -52,7 +52,7 @@
     </div>
 
     <footer class="app-footer">
-      SPARTA &mdash; Sistem Pelayanan Administrasi, Registrasi Terpadu, dan Arsip &copy; <span id="tahunFooter"></span> &mdash; Sekretariat Daerah
+      SPARTA &mdash; Sistem Pelayanan Administrasi Persuratan &copy; <span id="tahunFooter"></span> &mdash; Sekretariat Daerah
     </footer>
   </div>
 
@@ -164,17 +164,31 @@
         <h2>📨 Kirim Info ke Pemohon?</h2>
         <button class="modal-close" id="btnTutupNotifWa">&times;</button>
       </div>
-      <div class="desc">Tindakan pada surat <strong id="notifWaNoRegistrasi">-</strong> berhasil disimpan. Kirim informasi ini ke pemohon surat melalui WhatsApp?</div>
+      <div class="desc"><span id="notifWaDescAwal">Tindakan pada surat </span><strong id="notifWaNoRegistrasi">-</strong><span id="notifWaDescAkhir"> berhasil disimpan. Kirim informasi ini ke pemohon surat melalui WhatsApp?</span></div>
 
       <div class="card" style="background:#f8fafc;box-shadow:none;padding:14px 16px;margin-bottom:16px;">
         <div class="tahap-meta" id="notifWaPreview" style="white-space:pre-line;font-size:12.5px;"></div>
       </div>
 
+      <div id="notifWaQrBox" style="display:none;text-align:center;margin:-4px 0 16px;">
+        <img id="notifWaQrPreview" alt="QR Code tracking surat" style="width:150px;height:150px;border:1px solid #dde4ee;border-radius:10px;padding:6px;background:#fff;">
+        <div style="font-size:12px;color:#5b6b80;margin-top:6px;">QR Code tracking surat</div>
+      </div>
+
       <div class="warn-box" id="notifWaNoHpWarning" style="display:none;margin-bottom:14px;">Nomor WhatsApp pemohon tidak tersedia pada data surat ini, sehingga tidak bisa dikirim otomatis.</div>
 
-      <div style="display:flex;gap:10px;">
-        <button type="button" class="btn btn-wa" id="btnKirimNotifWa" style="flex:1;justify-content:center;">💬 Kirim via WhatsApp</button>
-        <button type="button" class="btn btn-outline" id="btnAbaikanNotifWa" style="flex:1;justify-content:center;">Abaikan</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-wa" id="btnKirimNotifWa" style="flex:1;justify-content:center;"><svg class="ikon-btn" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.5 14.4c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.23 1.36.2 1.88.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.05 21.8h-.01a9.9 9.9 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.89 9.88zM20.52 3.45A11.8 11.8 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.17-3.48-8.42z"/></svg>Kirim WhatsApp</button>
+        <button type="button" class="btn btn-primary" id="btnCetakQrNotifWa" style="flex:1;justify-content:center;display:none;"><svg class="ikon-btn" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h8v8H3V3zm2 2v4h4V5H5zm-2 8h8v8H3v-8zm2 2v4h4v-4H5zM13 3h8v8h-8V3zm2 2v4h4V5h-4zM13 13h2v2h-2v-2zm2 2h2v2h-2v-2zm-2 2h2v2h-2v-2zm4-4h2v2h-2v-2zm2 2h2v2h-2v-2zm-2 2h2v2h-2v-2zm2 2h2v2h-2v-2z"/></svg>Print QR Code</button>
+        <div id="notifWaQrTip" style="display:none;flex:1 1 100%;background:#eef6ff;border:1px solid #c9dcf5;border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.5;color:#0b2540;">
+          <div id="notifWaQrTipStatus" style="font-weight:700;margin-bottom:4px;"></div>
+          Di WhatsApp yang baru terbuka, klik kotak pesan lalu tekan <b>Ctrl+V</b> untuk menempel foto QR Code, kemudian kirim. Teks pesan terkirim terpisah dari foto.
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button type="button" class="btn btn-outline btn-sm" id="btnSalinUlangQr">Salin ulang foto</button>
+            <button type="button" class="btn btn-outline btn-sm" id="btnUnduhQrWa">Unduh foto</button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline" id="btnAbaikanNotifWa" style="flex:1 1 100%;justify-content:center;">Abaikan</button>
       </div>
     </div>
   </div>
@@ -200,135 +214,6 @@
   </div>
 
   <!-- =========================================================
-       MODAL ARSIPKAN SURAT (dari daftar Siap Diarsipkan)
-  ========================================================== -->
-  <div class="login-modal-overlay" id="arsipkanModalOverlay">
-    <div class="login-modal" style="max-width:520px;">
-      <div class="login-modal-header">
-        <h2>🗄️ Arsipkan Surat</h2>
-        <button class="modal-close" id="btnTutupArsipkan">&times;</button>
-      </div>
-      <div class="desc" id="arsipkanInfoSurat">-</div>
-      <input type="hidden" id="arsipNoRegistrasi">
-      <div class="form-grid">
-        <div>
-          <label>Nomor Arsip (opsional)</label>
-          <input type="text" id="arsipNomorArsip" placeholder="Contoh: 001/ARS/2026">
-        </div>
-        <div>
-          <label>Kode Lokasi (opsional)</label>
-          <select id="arsipKodeLokasi">
-            <option value="">-- Belum ditentukan --</option>
-          </select>
-        </div>
-        <div class="full">
-          <label>Kategori Arsip</label>
-          <input type="text" id="arsipKategoriArsip" placeholder="Ketik kategori, contoh: Surat Tugas 2026" autocomplete="off" required>
-        </div>
-        <div class="full">
-          <label>Keterangan (opsional)</label>
-          <textarea id="arsipKeterangan" placeholder="Catatan tambahan"></textarea>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:16px;">
-        <button type="button" class="btn btn-primary" id="btnSimpanArsip" style="flex:1;justify-content:center;">💾 Simpan Arsip</button>
-        <button type="button" class="btn btn-outline" id="btnBatalArsipkan" style="flex:1;justify-content:center;">Batal</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- =========================================================
-       MODAL TAMBAH ARSIP MANUAL (surat lama, tidak ada di sistem persuratan)
-  ========================================================== -->
-  <div class="login-modal-overlay" id="arsipManualModalOverlay">
-    <div class="login-modal" style="max-width:560px;">
-      <div class="login-modal-header">
-        <h2>➕ Tambah Arsip Manual</h2>
-        <button class="modal-close" id="btnTutupArsipManual">&times;</button>
-      </div>
-      <div class="desc">Untuk surat/berkas lama yang belum tercatat di sistem persuratan ini.</div>
-      <div class="form-grid">
-        <div>
-          <label>No Surat (opsional)</label>
-          <input type="text" id="manualNoSurat" placeholder="Contoh: 001/DINSOS/2020">
-        </div>
-        <div>
-          <label>Tanggal Surat (opsional)</label>
-          <input type="date" id="manualTanggalSurat">
-        </div>
-        <div class="full">
-          <label>Perihal</label>
-          <input type="text" id="manualPerihal" placeholder="Perihal / ringkasan isi surat" required>
-        </div>
-        <div>
-          <label>Jenis Surat (opsional)</label>
-          <input type="text" id="manualJenisSurat" placeholder="Contoh: Surat Keputusan">
-        </div>
-        <div>
-          <label>Surat Dari (opsional)</label>
-          <input type="text" id="manualSuratDariNama" placeholder="Nama instansi / perorangan">
-        </div>
-        <div>
-          <label>Nomor Arsip (opsional)</label>
-          <input type="text" id="manualNomorArsip" placeholder="Contoh: 001/ARS/2020">
-        </div>
-        <div>
-          <label>Kode Lokasi (opsional)</label>
-          <select id="manualKodeLokasi">
-            <option value="">-- Belum ditentukan --</option>
-          </select>
-        </div>
-        <div class="full">
-          <label>Kategori Arsip</label>
-          <input type="text" id="manualKategoriArsip" placeholder="Ketik kategori" autocomplete="off" required>
-        </div>
-        <div class="full">
-          <label>Keterangan (opsional)</label>
-          <textarea id="manualKeterangan" placeholder="Catatan tambahan"></textarea>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:16px;">
-        <button type="button" class="btn btn-primary" id="btnSimpanArsipManual" style="flex:1;justify-content:center;">💾 Simpan Arsip Manual</button>
-        <button type="button" class="btn btn-outline" id="btnBatalArsipManual" style="flex:1;justify-content:center;">Batal</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- =========================================================
-       MODAL TAMBAH / EDIT LOKASI PENYIMPANAN ARSIP
-  ========================================================== -->
-  <div class="login-modal-overlay" id="lokasiArsipModalOverlay">
-    <div class="login-modal" style="max-width:460px;">
-      <div class="login-modal-header">
-        <h2 id="lokasiArsipModalTitle">📦 Tambah Lokasi Penyimpanan</h2>
-        <button class="modal-close" id="btnTutupLokasiArsip">&times;</button>
-      </div>
-      <div class="form-grid">
-        <div class="full">
-          <label>Kode Lokasi</label>
-          <input type="text" id="lokasiKodeLokasi" placeholder="Contoh: R1-L2 (Ruang 1 - Lemari 2)">
-        </div>
-        <div class="full">
-          <label>Nama / Deskripsi Lokasi</label>
-          <input type="text" id="lokasiNamaLokasi" placeholder="Contoh: Ruang Arsip Lantai 1, Lemari 2">
-        </div>
-        <div class="full">
-          <label>Kapasitas Maksimal (jumlah berkas)</label>
-          <input type="number" id="lokasiKapasitasMaksimal" placeholder="Contoh: 200" min="1">
-        </div>
-        <div class="full">
-          <label>Keterangan (opsional)</label>
-          <textarea id="lokasiKeterangan" placeholder="Catatan tambahan"></textarea>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:16px;">
-        <button type="button" class="btn btn-primary" id="btnSimpanLokasiArsip" style="flex:1;justify-content:center;">💾 Simpan Lokasi</button>
-        <button type="button" class="btn btn-outline" id="btnBatalLokasiArsip" style="flex:1;justify-content:center;">Batal</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- =========================================================
        APLIKASI UTAMA (setelah login berhasil)
   ========================================================== -->
   <div id="appPage" style="display:none;">
@@ -346,7 +231,7 @@
           </div>
           <div>
             <div class="brand-title">SPARTA</div>
-            <div class="brand-sub">Sekretariat Daerah Kabupaten</div>
+            <div class="brand-sub">Sistem Pelayanan Administrasi Persuratan</div>
           </div>
         </div>
 
@@ -571,8 +456,18 @@
               <input type="text" id="cariSemuaSurat" placeholder="Ketik No Registrasi, perihal, pengirim, jenis, atau status...">
             </div>
             <div class="field">
-              <label for="filterBulanSemuaSurat">Filter Bulan</label>
-              <select id="filterBulanSemuaSurat"><option value="">Semua Bulan</option></select>
+              <label>Bulan</label>
+              <select id="filterBulanSemuaSurat">
+                <option value="">Semua Bulan</option>
+                <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tahun</label>
+              <select id="filterTahunSemuaSurat"><option value="">Semua Tahun</option></select>
             </div>
             <div class="field">
               <label>&nbsp;</label>
@@ -609,6 +504,28 @@
               <input type="text" id="cariSuratSelesai" placeholder="Ketik No Registrasi, perihal, atau nama penerima...">
             </div>
             <div class="field">
+              <label>Bulan</label>
+              <select id="filterBulanSuratSelesai">
+                <option value="">Semua Bulan</option>
+                <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tahun</label>
+              <select id="filterTahunSuratSelesai"><option value="">Semua Tahun</option></select>
+            </div>
+            <div class="field">
+              <label>Pengambilan</label>
+              <select id="filterPengambilanSuratSelesai">
+                <option value="">Semua</option>
+                <option value="belum">Belum Diambil</option>
+                <option value="sudah">Sudah Diambil</option>
+              </select>
+            </div>
+            <div class="field">
               <label>&nbsp;</label>
               <button class="btn btn-outline" id="btnRefreshSuratSelesai">🔄 Muat Ulang</button>
             </div>
@@ -631,131 +548,10 @@
         </div>
       </div>
 
-      <!-- ============== ARSIP DOKUMEN ============== -->
-      <div class="page" id="page-arsip">
-        <div class="card">
-          <h2>Surat Siap Diarsipkan</h2>
-          <div class="desc">Surat yang sudah selesai, belum diarsipkan, dan <strong>belum diambil</strong> oleh pemohon (surat yang sudah ada tanda terima tidak muncul di sini — dokumen fisiknya sudah di tangan pemohon). Diurutkan dari yang paling lama selesai.</div>
-          <div class="table-wrap">
-            <table id="tabelSiapArsip">
-              <thead>
-                <tr>
-                  <th>No Registrasi</th><th>Perihal</th><th>Jenis</th><th>Status</th><th>Tanggal</th><th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody><tr><td colspan="6" class="empty-state">Memuat data...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
-            <div>
-              <h2>Daftar Arsip</h2>
-              <div class="desc">Semua surat yang sudah diarsipkan (dari sistem maupun input manual).</div>
-            </div>
-            <button class="btn btn-primary" id="btnBukaArsipManual">➕ Tambah Arsip Manual</button>
-          </div>
-
-          <div class="filter-row">
-            <div class="field" style="flex:1;min-width:220px;">
-              <label>Cari Cepat</label>
-              <input type="text" id="cariArsip" placeholder="Ketik No Registrasi, perihal, nomor arsip, kategori, atau lokasi...">
-            </div>
-            <div class="field">
-              <label>&nbsp;</label>
-              <button class="btn btn-outline" id="btnRefreshArsip">🔄 Muat Ulang</button>
-            </div>
-            <div class="field" style="margin-left:auto;align-self:end;">
-              <span class="tahap-meta" id="jumlahArsip"></span>
-            </div>
-          </div>
-
-          <div class="table-wrap">
-            <table id="tabelArsip">
-              <thead>
-                <tr>
-                  <th>No Registrasi</th><th>Nomor Arsip</th><th>Perihal</th><th>Kategori</th>
-                  <th>Kode Lokasi</th><th>Tanggal Arsip</th><th>Sumber</th><th>Diarsipkan Oleh</th><th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody><tr><td colspan="9" class="empty-state">Memuat data...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ============== CARI DOKUMEN (lokasi penyimpanan) ============== -->
-      <div class="page" id="page-carilokasi">
-        <div class="card">
-          <h2>🔎 Cari Dokumen</h2>
-          <div class="desc">Cari dokumen yang sudah diarsipkan untuk mengetahui di lokasi mana fisiknya disimpan.</div>
-
-          <div class="filter-row">
-            <div class="field" style="flex:1;min-width:260px;">
-              <label>Kata Kunci</label>
-              <input type="text" id="cariLokasiKeyword" placeholder="Ketik No Registrasi, perihal, nomor arsip, atau kategori...">
-            </div>
-            <div class="field">
-              <label>&nbsp;</label>
-              <button class="btn btn-primary" id="btnCariLokasi">🔎 Cari</button>
-            </div>
-          </div>
-
-          <div id="hasilCariLokasi" style="margin-top:16px;"></div>
-        </div>
-      </div>
-
-      <!-- ============== DASHBOARD ARSIP ============== -->
-      <div class="page" id="page-dashboardarsip">
-        <div class="stats-grid" id="statsGridArsip">
-          <div class="stat-box"><div class="num">-</div><div class="label">Total Arsip</div></div>
-          <div class="stat-box amber"><div class="num">-</div><div class="label">Siap Diarsipkan</div></div>
-          <div class="stat-box"><div class="num">-</div><div class="label">Jumlah Lokasi</div></div>
-          <div class="stat-box green"><div class="num">-</div><div class="label">Kapasitas Terpakai</div></div>
-        </div>
-
-        <div class="chart-grid">
-          <div class="card">
-            <h2>Jumlah Arsip per Kategori</h2>
-            <div class="desc">Diurutkan dari kategori dengan arsip terbanyak.</div>
-            <div class="chart-box" id="chartKategoriArsip"><div class="empty-state">Memuat data...</div></div>
-          </div>
-
-          <div class="card">
-            <h2>Kapasitas per Lokasi Penyimpanan</h2>
-            <div class="desc">Diurutkan dari lokasi yang paling penuh.</div>
-            <div class="chart-box" id="chartLokasiArsip"><div class="empty-state">Memuat data...</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ============== LOKASI PENYIMPANAN ARSIP ============== -->
-      <div class="page" id="page-lokasiarsip">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
-            <div>
-              <h2>Lokasi Penyimpanan Arsip</h2>
-              <div class="desc">Kode lokasi fisik penyimpanan berkas beserta estimasi kapasitasnya.</div>
-            </div>
-            <button class="btn btn-primary" id="btnBukaTambahLokasi">➕ Tambah Lokasi</button>
-          </div>
-          <div class="table-wrap">
-            <table id="tabelLokasiArsip">
-              <thead>
-                <tr>
-                  <th>Kode Lokasi</th><th>Nama Lokasi</th><th>Kapasitas</th><th>Terpakai</th><th>Sisa</th><th>Keterangan</th><th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody><tr><td colspan="7" class="empty-state">Memuat data...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
       <!-- ============== LAPORAN HARIAN & BULANAN ============== -->
       <div class="page" id="page-laporan">
-        <div class="card">
+        <!-- Menu Laporan berupa dropdown (Harian / Bulanan): hanya satu kartu yang tampil sekaligus. -->
+        <div class="card" id="cardLaporanHarian">
           <h2>Laporan Harian</h2>
           <div class="desc">Ringkasan aktivitas persuratan hari ini.</div>
           <div class="stats-grid" id="statsHarian">
@@ -774,7 +570,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card laporan-sembunyi" id="cardLaporanBulanan">
           <h2>Laporan Bulanan / Filter</h2>
           <div class="desc">Filter berdasarkan bulan, tahun, dan jenis surat, lalu ekspor ke PDF atau Excel.</div>
 
@@ -856,8 +652,9 @@
   </div>
 
   <script src="config.js"></script>
-  <script src="gas-api.js"></script>
-  <script src="app.js"></script>
+  <script src="gas-api.js?v=20261007"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="app.js?v=20261017"></script>
   <script>
     // Tracking langsung dari tautan WhatsApp: ?noreg=001%2FSM%2F2026
     (function () {
@@ -965,10 +762,62 @@
         }
       }
 
-      function buka(noReg) {
+      function esc(t) { return String(t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+      function teksSel(td) {
+        if (!td) return '';
+        var c = td.querySelector('.sel-clamp');
+        return ((c && c.title) || td.textContent || '').trim();
+      }
+
+      // Kepala pop up langsung tampil dari data yang sudah ada di baris tabel (tanpa menunggu server);
+      // riwayat & alur persetujuan menyusul begitu data tiba.
+      function kepalaInstan(tr) {
+        var t = tr.children;
+        if (t.length < 8) return '<div class="empty-state">Memuat tracking surat...</div>';
+        var perihal = teksSel(t[4]), dari = teksSel(t[2]), tujuan = teksSel(t[6]);
+        return '<div class="no-reg-result">' +
+          '<div class="no">' + esc(t[0].textContent.trim()) + '</div>' +
+          (perihal ? '<div class="perihal">' + esc(perihal) + '</div>' : '') +
+          '<div class="field-row">' +
+            '<span class="item"><strong>Jenis:</strong> ' + esc(t[5].textContent.trim()) + '</span>' +
+            '<span class="item"><strong>Dari:</strong> ' + esc(dari) + '</span>' +
+            '<span class="item"><strong>Tanggal Masuk:</strong> ' + esc(t[1].textContent.trim()) + '</span>' +
+            '<span class="item"><strong>Tujuan:</strong> ' + esc(tujuan) + '</span>' +
+          '</div></div>' +
+          '<div class="empty-state">Memuat riwayat &amp; alur persetujuan...</div>';
+      }
+
+      // Muat data tracking lebih awal begitu kursor berhenti di atas sebuah baris (hasil masuk cache),
+      // sehingga saat baris diklik pop up langsung terisi.
+      var tundaPrefetch = null, sudahPrefetch = {};
+      function prefetch(tr) {
+        if (!tr || tr.children.length < 3) return;
+        var noReg = (tr.getAttribute('data-noreg') || '').trim();
+        if (!noReg || sudahPrefetch[noReg]) return;
+        sudahPrefetch[noReg] = true;
+        setTimeout(function () { delete sudahPrefetch[noReg]; }, 60000);
+        try {
+          google.script.run.withSilentErrors()
+            .withSuccessHandler(function () {}).withFailureHandler(function () {})
+            .getTrackingByNoRegistrasi(noReg);
+        } catch (e) { /* abaikan */ }
+      }
+      function jadwalkanPrefetch(e) {
+        var tr = e.target.closest ? e.target.closest('tbody tr') : null;
+        clearTimeout(tundaPrefetch);
+        if (!tr) return;
+        tundaPrefetch = setTimeout(function () { prefetch(tr); }, 120);
+      }
+      tabel.addEventListener('mouseover', jadwalkanPrefetch);
+      tabel.addEventListener('touchstart', function (e) {
+        var tr = e.target.closest ? e.target.closest('tbody tr') : null;
+        prefetch(tr);
+      }, { passive: true });
+
+      function buka(noReg, tr) {
         var myToken = ++token;
         lbl.textContent = noReg;
-        body.innerHTML = '<div class="empty-state">Memuat tracking surat...</div>';
+        body.innerHTML = tr ? kepalaInstan(tr) : '<div class="empty-state">Memuat tracking surat...</div>';
         overlay.classList.add('show');
 
         if (observer) observer.disconnect();
@@ -980,7 +829,10 @@
         var salin = function () {
           if (myToken !== token) return;
           var isi = proxyHasil.innerHTML.trim();
-          if (isi) body.innerHTML = isi;
+          if (!isi) return;
+          // "Mencari data..." hanya penanda sementara: biarkan kepala instan tetap tampil sampai hasil asli tiba.
+          if (/^<div class="empty-state">Mencari data/i.test(isi) && body.querySelector('.no-reg-result')) return;
+          body.innerHTML = isi;
         };
 
         observer = new MutationObserver(salin);
@@ -1002,7 +854,7 @@
         if (!tr || !tabel.contains(tr) || tr.parentNode.tagName !== 'TBODY') return;
         if (tr.children.length < 3) return; // baris "Memuat data..." / kosong
         var noReg = (tr.getAttribute('data-noreg') || tr.children[0].textContent || '').trim();
-        if (noReg) buka(noReg);
+        if (noReg) buka(noReg, tr);
       });
 
       // Mode aman: buka halaman dengan ?safe=1 untuk mematikan perapian baris (uji pembanding).

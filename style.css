@@ -89,6 +89,22 @@
   .nav-group-label.active-group::after{ transform:rotate(90deg); }
   .nav-group-items{ display:flex; flex-direction:column; gap:3px; }
 
+  /* Menu dropdown (mis. Laporan -> Harian / Bulanan) */
+  .nav-item.has-sub{ justify-content:space-between; }
+  .nav-item .nav-caret{ font-size:11px; transition:transform .18s; opacity:.8; }
+  .nav-item.has-sub.terbuka .nav-caret{ transform:rotate(180deg); }
+  .nav-sub{ display:none; flex-direction:column; gap:2px; margin:0 0 2px 22px; padding-left:10px; border-left:1px solid rgba(255,255,255,.14); }
+  .nav-sub.buka{ display:flex; }
+  .nav-subitem{
+    padding:8px 12px; border-radius:8px; font-size:13px; font-weight:600;
+    color:#a9c3dc; cursor:pointer; white-space:nowrap; transition:.15s;
+  }
+  .nav-subitem:hover{ background:rgba(255,255,255,.07); color:#fff; }
+  .nav-subitem.active{ background:rgba(223,180,95,.18); color:var(--gold-light); }
+
+  /* Halaman Laporan: satu kartu saja yang terlihat */
+  #page-laporan .card.laporan-sembunyi{ display:none; }
+
   .sidebar-footer{
     padding:16px 16px 20px; flex-shrink:0;
     border-top:1px solid rgba(255,255,255,.1);
@@ -452,7 +468,7 @@
   .skpd-suggest-item:hover{ background:#eef4fb; color:var(--navy); }
   .skpd-suggest-empty{ padding:10px 14px; font-size:12.5px; color:var(--muted); }
 
-  /* Grafik berbasis CSS murni - tanpa library eksternal/CDN (Dashboard Persuratan & Arsip) */
+  /* Grafik berbasis CSS murni - tanpa library eksternal/CDN (Dashboard Persuratan) */
   .chart-grid{
     display:grid; grid-template-columns:repeat(auto-fit, minmax(320px,1fr)); gap:18px;
   }
@@ -504,7 +520,7 @@
   .donut-legend-item{ display:flex; align-items:center; gap:6px; color:var(--text); white-space:nowrap; }
   .donut-legend .dot{ width:10px; height:10px; border-radius:3px; flex-shrink:0; }
 
-  /* Grafik batang HORIZONTAL (mis. Tahap Menunggu, Kapasitas Lokasi) */
+  /* Grafik batang HORIZONTAL (mis. Tahap Menunggu) */
   .hbar-row{
     display:flex; align-items:center; gap:12px;
     padding:9px 2px; border-bottom:1px solid var(--border);
@@ -877,11 +893,39 @@
   /* ============ POP UP TRACKING DARI DAFTAR SURAT ============ */
   #tabelSemuaSurat tbody tr[data-noreg]{ cursor:pointer; }
   #tabelSemuaSurat tbody tr[data-noreg]:hover td{ background:#e3eefb; }
+  #trackingPopupOverlay{ padding:14px; }
   #trackingPopupOverlay .login-modal{
-    max-width:680px; max-height:90vh; overflow-y:auto; padding:22px 22px 26px;
+    max-width:460px; max-height:84vh; overflow-y:auto; padding:14px 16px 16px; border-radius:14px;
+    overscroll-behavior:contain;
   }
-  #trackingPopupBody .empty-state{ padding:30px 10px; text-align:center; color:var(--muted); }
+  #trackingPopupOverlay .login-modal-header h2{ font-size:15px; }
+  #trackingPopupBody{ margin-top:10px !important; }
+  #trackingPopupBody .empty-state{ padding:22px 10px; text-align:center; color:var(--muted); font-size:13px; }
   #trackingPopupBody > *:first-child{ margin-top:0; }
+  /* Kartu-kartu di dalam pop up dipadatkan agar serasi dengan ukuran pop up */
+  #trackingPopupBody .no-reg-result{ padding:11px 14px; margin-bottom:10px; border-radius:10px; box-shadow:none; }
+  #trackingPopupBody .no-reg-result .no{ font-size:16px; }
+  #trackingPopupBody .no-reg-result .perihal{ font-size:12.5px; line-height:1.4; margin-top:3px; }
+  #trackingPopupBody .no-reg-result .field-row{
+    display:grid; grid-template-columns:1fr 1fr; gap:3px 14px; margin-top:8px; padding-top:8px; font-size:12px; line-height:1.4;
+  }
+  #trackingPopupBody .no-reg-result .field-row .item:nth-child(2){ grid-column:1 / -1; } /* "Dari" biasanya panjang */
+  #trackingPopupBody .card{ padding:11px 14px; margin-bottom:10px; border-radius:10px; box-shadow:none; }
+  #trackingPopupBody .card h2{ font-size:13.5px; margin-bottom:6px; }
+  #trackingPopupBody .card p{ margin:4px 0; }
+  #trackingPopupBody .timeline li{ padding:0 0 12px 28px; margin-left:7px; }
+  #trackingPopupBody .timeline .dot{ width:14px; height:14px; left:-8px; border-width:2px; }
+  #trackingPopupBody .timeline .tahap-title{ font-size:13px; }
+  #trackingPopupBody .timeline .tahap-meta{ font-size:11.5px; margin-top:2px; }
+  #trackingPopupBody .timeline .tahap-catatan{ font-size:12px; margin-top:4px; padding:5px 9px; }
+  #trackingPopupBody .info-box, #trackingPopupBody .success-box, #trackingPopupBody .warn-box{ padding:9px 12px; font-size:12.5px; }
+  #trackingPopupBody .desc{ font-size:12px; margin-bottom:10px; }
+  #trackingPopupBody .btn{ padding:8px 14px; min-height:0; font-size:13px; }
+  #trackingPopupBody input[type=text]{ padding:8px 10px; font-size:13px; }
+  @media (max-width:640px){
+    #trackingPopupOverlay .login-modal{ padding:12px 12px 14px; max-height:88vh; }
+    #trackingPopupBody .no-reg-result .field-row{ grid-template-columns:1fr; }
+  }
 
 
   /* ============ RAPIKAN DAFTAR SURAT MASUK (baris seragam, scroll halus) ============ */
@@ -953,3 +997,122 @@
     .disposisi-modal-header{ padding:14px 16px; }
     .disposisi-body{ padding:14px 12px 22px; max-height:none; }
   }
+
+/* ============================================================
+ *  DASHBOARD RESPONSIF & RAPI (semua akun)
+ *  - Admin TU : 6 kotak -> 3 kolom x 2 baris (HP: 2 kolom x 3 baris), tanpa ruang kosong
+ *  - Role lain: 4 kotak -> 4 kolom (tablet/HP: 2 x 2)
+ *  - Grafik   : 2 grafik sebaris + 1 grafik selebar penuh (HP: ditumpuk 1 kolom)
+ *  Blok ini sengaja di paling bawah agar menimpa aturan dashboard sebelumnya.
+ * ============================================================ */
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:14px;
+  align-items:stretch;
+  margin-bottom:20px;
+}
+.stats-grid.stats-grid-role{ grid-template-columns:repeat(4, minmax(0, 1fr)); }
+.stats-grid .stat-box{
+  flex:none; min-width:0;
+  display:flex; flex-direction:column; justify-content:flex-start;
+}
+.stats-grid .stat-box .label{ overflow-wrap:anywhere; line-height:1.35; }
+/* Kotak persentase = kotak biasa (tidak lagi direntangkan oleh skrip) */
+.stats-grid .progress-stat-box{ grid-column:auto !important; }
+.stats-grid .progress-stat-box .tahap-meta{ font-size:12px; line-height:1.35; }
+
+.chart-grid{
+  display:grid;
+  grid-template-columns:repeat(6, minmax(0, 1fr));
+  gap:18px;
+  align-items:stretch;
+}
+.chart-grid > .card{ grid-column:span 3; min-width:0; margin-bottom:0; }
+.chart-grid > .card:nth-child(3){ grid-column:span 6; }
+
+@media (max-width:1100px){
+  .stats-grid.stats-grid-role{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width:860px){
+  .chart-grid{ grid-template-columns:minmax(0, 1fr); gap:14px; }
+  .chart-grid > .card,
+  .chart-grid > .card:nth-child(3){ grid-column:auto; }
+}
+@media (max-width:560px){
+  .stats-grid,
+  .stats-grid.stats-grid-role{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+  .stats-grid .stat-box{ padding:14px 14px 14px 16px; }
+  .stats-grid .stat-box .num{ font-size:24px; }
+  .stats-grid .stat-box .label{ font-size:12px; }
+  .vbar-chart-bars, .vbar-chart-labels{ gap:8px; }
+  .vbar-chart-labels span{ font-size:10.5px; }
+}
+
+/* ---- Diagram donat "Distribusi Jenis Surat": lebih besar + angka di tiap irisan ---- */
+#chartBulanSurat, #chartJenisSurat{ height:auto; min-height:380px; max-height:none; overflow:visible; }
+/* Dua kartu grafik sebaris: grafik batang ikut meninggi mengikuti tinggi diagram donat (tidak ada ruang kosong) */
+.chart-grid > .card:nth-child(-n+2){ display:flex; flex-direction:column; }
+#chartBulanSurat, #chartJenisSurat{ flex:1; }
+#chartBulanSurat{ display:flex; flex-direction:column; }
+#chartBulanSurat .vbar-chart{ flex:1; height:auto; }
+.donut-chart-wrap{ gap:20px; justify-content:flex-start; }
+.donut-chart{
+  width:min(100%, 280px); height:auto; aspect-ratio:1 / 1;
+  margin:6px auto 0;
+}
+.donut-hole{ inset:20%; flex-direction:column; gap:2px; }
+.donut-total-num{ font-size:clamp(22px, 8vw, 34px); font-weight:800; color:var(--navy); line-height:1; }
+.donut-total-text{ font-size:12px; font-weight:700; color:var(--muted); letter-spacing:.5px; }
+.donut-slice-label{
+  position:absolute; transform:translate(-50%, -50%);
+  font-size:clamp(11px, 3.4vw, 14px); font-weight:800; color:#fff; line-height:1;
+  text-shadow:0 1px 3px rgba(0,0,0,.55); pointer-events:none;
+}
+.donut-legend{ font-size:12.5px; gap:8px 18px; }
+@media (max-width:560px){
+  #chartBulanSurat{ min-height:260px; }
+  #chartJenisSurat{ min-height:0; }
+  .donut-legend{ flex-direction:column; align-items:flex-start; gap:6px; margin:0 auto; }
+}
+
+  /* Ikon SVG pada tombol (WhatsApp, QR Code) */
+  .btn .ikon-btn{ width:18px; height:18px; flex:0 0 18px; }
+
+
+/* ============================================================
+ *  POP UP PROSES PERSETUJUAN - dipadatkan agar selaras dengan pop up Tracking (Daftar Surat Masuk)
+ *  Blok ini di paling bawah agar menimpa aturan sebelumnya. Tanpa blur/animasi berat -> muncul lebih cepat.
+ * ============================================================ */
+#disposisiPopupOverlay{
+  align-items:center; padding:14px; overflow-y:auto;
+  background:rgba(6,37,68,.55);
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+}
+#disposisiPopupOverlay .disposisi-modal{
+  max-width:500px; border-radius:14px; box-shadow:var(--shadow-lg);
+  animation:fadeIn .12s ease;
+}
+#disposisiPopupOverlay .disposisi-modal-header{ padding:11px 16px; border-bottom-width:2px; }
+#disposisiPopupOverlay .disposisi-modal-header h2{ font-size:15px; }
+#disposisiPopupOverlay .disposisi-modal-header .sub{ margin-top:2px; font-size:12px; }
+#disposisiPopupOverlay .disposisi-modal-header .modal-close{ font-size:24px; }
+#disposisiPopupOverlay .disposisi-body{ padding:12px 14px 14px; max-height:calc(86vh - 56px); overscroll-behavior:contain; }
+#disposisiPopupOverlay .disposisi-body .empty-state{ padding:18px 10px; text-align:center; color:var(--muted); font-size:13px; }
+#disposisiPopupOverlay .no-reg-result{ padding:11px 14px; margin-bottom:10px; border-radius:10px; box-shadow:none; }
+#disposisiPopupOverlay .no-reg-result .no{ font-size:16px; }
+#disposisiPopupOverlay .no-reg-result .perihal{ font-size:12.5px; line-height:1.4; margin-top:3px; }
+#disposisiPopupOverlay .disposisi-body .card{ padding:11px 14px; margin-bottom:10px; border-radius:10px; }
+#disposisiPopupOverlay .disposisi-body .card h2{ font-size:13.5px; margin-bottom:6px; }
+#disposisiPopupOverlay .disposisi-body .desc{ font-size:12px; margin-bottom:10px; line-height:1.45; }
+#disposisiPopupOverlay .disposisi-body textarea{ min-height:56px; padding:8px 10px; font-size:13px; }
+#disposisiPopupOverlay .disposisi-body .btn{ padding:8px 14px; min-height:0; font-size:13px; }
+#disposisiPopupOverlay .disposisi-body .pill{ font-size:11.5px; }
+#disposisiPopupOverlay .disposisi-body .info-box,
+#disposisiPopupOverlay .disposisi-body .warn-box{ padding:9px 12px; font-size:12.5px; }
+@media (max-width:600px){
+  #disposisiPopupOverlay{ padding:10px; }
+  #disposisiPopupOverlay .disposisi-modal{ border-radius:14px; min-height:0; }
+  #disposisiPopupOverlay .disposisi-modal-header{ padding:10px 14px; }
+  #disposisiPopupOverlay .disposisi-body{ padding:10px 10px 12px; max-height:calc(88vh - 54px); }
+}

@@ -1,3 +1,4 @@
+console.info('[SPARTA] app.js versi 20261017 termuat');
 /* ============================================================
    *  CLIENT-SIDE LOGIC
    * ============================================================ */
@@ -6,26 +7,22 @@
   const URUTAN_TAHAP_BAKU_CLIENT = ['Paraf Asisten', 'Paraf Staf Ahli', 'Paraf Sekda', 'Tanda Tangan Sekda', 'Tanda Tangan Wakil Bupati', 'Tanda Tangan Bupati'];
 
   // Tab yang tersedia untuk masing-masing role
+  const MENU_STANDAR = [
+    {p:'dashboard', label:'📊 Dashboard'},
+    {p:'registrasi', label:'📝 Registrasi Surat'},
+    {p:'tracking', label:'🔎 Tracking Surat'},
+    {p:'disposisi', label:'✅ Menunggu Persetujuan'},
+    {p:'semuasurat', label:'📋 Daftar Surat Masuk'},
+    {p:'suratselesai', label:'✔️ Surat Selesai'},
+    {p:'laporan', label:'📁 Laporan'}
+  ];
   const TAB_PER_ROLE = {
-    'Admin TU'      : [
-      {p:'dashboard', label:'📊 Dashboard', group:'Persuratan'},
-      {p:'registrasi', label:'📝 Registrasi Surat Masuk', group:'Persuratan'},
-      {p:'tracking', label:'🔍 Tracking Surat', group:'Persuratan'},
-      {p:'disposisi', label:'✅ Menunggu Persetujuan (Super Admin)', group:'Persuratan'},
-      {p:'semuasurat', label:'📋 Daftar Surat Masuk', group:'Persuratan'},
-      {p:'suratselesai', label:'✔️ Surat Selesai', group:'Persuratan'},
-      {p:'laporan', label:'📁 Laporan', group:'Persuratan'},
-      {p:'dashboardarsip', label:'📊 Dashboard Arsip', group:'Pengarsipan'},
-      {p:'arsip', label:'🗄️ Pengarsipan', group:'Pengarsipan'},
-      {p:'carilokasi', label:'🔎 Cari Dokumen', group:'Pengarsipan'},
-      {p:'lokasiarsip', label:'📦 Lokasi Penyimpanan', group:'Pengarsipan'}
-    ],
-    'Asisten'       : [ {p:'dashboard', label:'📊 Dashboard'}, {p:'registrasi', label:'📝 Registrasi Surat Masuk'}, {p:'tracking', label:'🔍 Tracking Surat'}, {p:'disposisi', label:'✅ Menunggu Persetujuan'}, {p:'semuasurat', label:'📋 Daftar Surat Masuk'}, {p:'suratselesai', label:'✔️ Surat Selesai'}, {p:'laporan', label:'📁 Laporan'} ],
-    'Staf Ahli'     : [ {p:'dashboard', label:'📊 Dashboard'}, {p:'registrasi', label:'📝 Registrasi Surat Masuk'}, {p:'tracking', label:'🔍 Tracking Surat'}, {p:'disposisi', label:'✅ Menunggu Persetujuan'}, {p:'semuasurat', label:'📋 Daftar Surat Masuk'}, {p:'suratselesai', label:'✔️ Surat Selesai'}, {p:'laporan', label:'📁 Laporan'} ],
-    'Sekda'         : [ {p:'dashboard', label:'📊 Dashboard'}, {p:'registrasi', label:'📝 Registrasi Surat Masuk'}, {p:'tracking', label:'🔍 Tracking Surat'}, {p:'disposisi', label:'✅ Menunggu Persetujuan'}, {p:'semuasurat', label:'📋 Daftar Surat Masuk'}, {p:'suratselesai', label:'✔️ Surat Selesai'}, {p:'laporan', label:'📁 Laporan'} ],
-    'Wakil Bupati'  : [ {p:'dashboard', label:'📊 Dashboard'}, {p:'registrasi', label:'📝 Registrasi Surat Masuk'}, {p:'tracking', label:'🔍 Tracking Surat'}, {p:'disposisi', label:'✅ Menunggu Persetujuan'}, {p:'semuasurat', label:'📋 Daftar Surat Masuk'}, {p:'suratselesai', label:'✔️ Surat Selesai'}, {p:'laporan', label:'📁 Laporan'} ],
-    'Bupati'        : [ {p:'dashboard', label:'📊 Dashboard'}, {p:'registrasi', label:'📝 Registrasi Surat Masuk'}, {p:'tracking', label:'🔍 Tracking Surat'}, {p:'disposisi', label:'✅ Menunggu Persetujuan'}, {p:'semuasurat', label:'📋 Daftar Surat Masuk'}, {p:'suratselesai', label:'✔️ Surat Selesai'}, {p:'laporan', label:'📁 Laporan'} ],
-    'Petugas Arsip' : [ {p:'dashboardarsip', label:'📊 Dashboard Arsip'}, {p:'arsip', label:'🗄️ Pengarsipan'}, {p:'carilokasi', label:'🔎 Cari Dokumen'}, {p:'lokasiarsip', label:'📦 Lokasi Penyimpanan'} ]
+    'Admin TU'      : MENU_STANDAR,
+    'Asisten'       : MENU_STANDAR,
+    'Staf Ahli'     : MENU_STANDAR,
+    'Sekda'         : MENU_STANDAR,
+    'Wakil Bupati'  : MENU_STANDAR,
+    'Bupati'        : MENU_STANDAR
   };
 
   // Role dengan hak Super Admin: bisa memproses tahap persetujuan apa pun
@@ -41,9 +38,6 @@
     initSidebarToggle();
     initEditSuratModal();
     initNotifWaModal();
-    initArsipkanModal();
-    initArsipManualModal();
-    initLokasiArsipModal();
     cobaPulihkanSesi();
 
     // Grid statistik dashboard pakai auto-fit (jumlah kolom berubah sesuai lebar layar) -
@@ -138,6 +132,12 @@
   }
 
   function masukKeAplikasi(info) {
+    // Role yang sudah tidak punya menu (mis. akun lama "Petugas Arsip") ditolak, bukan diberi menu Admin TU.
+    if (!TAB_PER_ROLE[info.role]) {
+      showToast('Role "' + info.role + '" tidak lagi tersedia. Hubungi Admin TU.', 'error');
+      keluarDariAplikasi();
+      return;
+    }
     CURRENT_USER = info; // { token, username, nama, role }
 
     document.getElementById('landingPage').style.display = 'none';
@@ -149,19 +149,25 @@
 
     buildNavTabs(info.role);
 
-    if (info.role === 'Petugas Arsip') {
-      // Role ini punya menu & dashboard sendiri, terpisah total dari manajemen persuratan.
-      loadDashboardArsip();
-      loadHalamanArsip();
-      loadDaftarLokasiArsip();
-    } else {
-      populateJenisSurat();
-      populateDaftarSkpd();
-      populateFilterTahunJenis();
-      loadDashboard();
-      loadKotakMasukSaya(); // semua role persuratan (termasuk Super Admin) langsung melihat kotak masuknya
-      initRegistrasiForm();
-    }
+    populateJenisSurat();
+    populateDaftarSkpd();
+    populateFilterTahunJenis();
+    loadDashboard();
+    loadKotakMasukSaya(); // semua role persuratan (termasuk Super Admin) langsung melihat kotak masuknya
+    initRegistrasiForm();
+    prefetchDaftarSurat();
+  }
+
+  // Ambil Daftar Surat Masuk di latar belakang segera setelah login, supaya saat menunya dibuka
+  // datanya sudah siap (hasilnya masuk cache sesi; permintaan yang sama digabung oleh gas-api.js).
+  function prefetchDaftarSurat() {
+    try {
+      google.script.run
+        .withSilentErrors()
+        .withSuccessHandler(function (list) { DAFTAR_SURAT_CACHE = list || []; })
+        .withFailureHandler(function () { /* diamkan - dimuat ulang saat menu dibuka */ })
+        .getAllSurat(CURRENT_USER.token);
+    } catch (e) { /* abaikan */ }
   }
 
   function keluarDariAplikasi() {
@@ -198,7 +204,16 @@
       }
       html += '<div class="nav-group-items" data-group-items="' + g + '"' + (adaGrup && !grupAktif ? ' style="display:none;"' : '') + '>';
       groupItems[g].forEach(function (t, ti) {
-        html += '<div class="nav-item' + (gi === 0 && ti === 0 ? ' active' : '') + '" data-page="' + t.p + '">' + t.label + '</div>';
+        const aktif = (gi === 0 && ti === 0 ? ' active' : '');
+        if (t.p === 'laporan') { // dropdown: Harian / Bulanan
+          html += '<div class="nav-item has-sub' + aktif + '" data-page="laporan">' + t.label + '<span class="nav-caret">▾</span></div>' +
+            '<div class="nav-sub" id="navSubLaporan">' +
+              '<div class="nav-subitem" data-sublaporan="harian">📅 Harian</div>' +
+              '<div class="nav-subitem" data-sublaporan="bulanan">🗓️ Bulanan</div>' +
+            '</div>';
+        } else {
+          html += '<div class="nav-item' + aktif + '" data-page="' + t.p + '">' + t.label + '</div>';
+        }
       });
       html += '</div>';
     });
@@ -219,8 +234,32 @@
       });
     });
 
+    // Sub-menu Laporan (Harian / Bulanan)
+    nav.querySelectorAll('.nav-subitem').forEach(function (subEl) {
+      subEl.addEventListener('click', function () {
+        const induk = nav.querySelector('.nav-item[data-page="laporan"]');
+        nav.querySelectorAll('.nav-item').forEach(function (t) { t.classList.remove('active'); });
+        if (induk) { induk.classList.add('active'); induk.classList.add('terbuka'); }
+        document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
+        document.getElementById('page-laporan').classList.add('active');
+        tampilkanSubLaporan(subEl.dataset.sublaporan);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        tutupSidebarMobile();
+      });
+    });
+
     nav.querySelectorAll('.nav-item').forEach(function (tabEl) {
       tabEl.addEventListener('click', function () {
+        // Dropdown Laporan: klik = buka/tutup daftar Harian & Bulanan (toggle murni).
+        // Saat ditutup, halaman yang sedang tampil tidak berubah.
+        if (tabEl.classList.contains('has-sub')) {
+          const subBox = tabEl.nextElementSibling;
+          const buka = !subBox.classList.contains('buka');
+          subBox.classList.toggle('buka', buka);
+          tabEl.classList.toggle('terbuka', buka);
+          if (!buka) return; // tutup saja, jangan pindah halaman / muat ulang data
+        }
+
         nav.querySelectorAll('.nav-item').forEach(function (t) { t.classList.remove('active'); });
         tabEl.classList.add('active');
 
@@ -236,16 +275,13 @@
         document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
         document.getElementById('page-' + tabEl.dataset.page).classList.add('active');
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        tutupSidebarMobile(); // di layar sempit, sidebar otomatis tertutup setelah memilih menu
+        if (!tabEl.classList.contains('has-sub')) tutupSidebarMobile(); // dropdown tetap terbuka agar sub-menu bisa dipilih
 
         if (tabEl.dataset.page === 'dashboard') loadDashboard();
         if (tabEl.dataset.page === 'disposisi') loadKotakMasukSaya();
         if (tabEl.dataset.page === 'semuasurat') loadDaftarSuratMasuk();
         if (tabEl.dataset.page === 'suratselesai') loadSuratSelesai();
-        if (tabEl.dataset.page === 'arsip') loadHalamanArsip();
-        if (tabEl.dataset.page === 'dashboardarsip') loadDashboardArsip();
-        if (tabEl.dataset.page === 'lokasiarsip') loadDaftarLokasiArsip();
-        if (tabEl.dataset.page === 'laporan') { loadLaporanHarian(); loadLaporanBulanan(); }
+        if (tabEl.dataset.page === 'laporan') tampilkanSubLaporan(SUB_LAPORAN_AKTIF);
       });
     });
   }
@@ -587,21 +623,6 @@
     html += '  <p style="font-size:13px;color:var(--muted);">Posisi surat: <strong>' + res.posisiSaatIni + '</strong></p>';
     html += '</div>';
 
-    if (res.arsipInfo && res.arsipInfo.sudahDiarsipkan) {
-      html += '<div class="card" style="background:#eef4fb;">';
-      html += '  <h2>📦 Surat Sudah Diarsipkan</h2>';
-      html += '  <div class="field-row">';
-      html += '    <span class="item"><strong>Tanggal Diarsipkan:</strong> ' + res.arsipInfo.tanggalArsip + '</span>';
-      if (res.arsipInfo.kodeLokasi) {
-        html += '    <span class="item"><strong>Kode Lokasi:</strong> ' + res.arsipInfo.kodeLokasi + '</span>';
-      }
-      if (res.arsipInfo.nomorArsip) {
-        html += '    <span class="item"><strong>Nomor Arsip:</strong> ' + res.arsipInfo.nomorArsip + '</span>';
-      }
-      html += '  </div>';
-      html += '</div>';
-    }
-
     if (res.undangan) {
       html += '<div class="card">';
       html += '  <h2>Detail Undangan</h2>';
@@ -723,7 +744,7 @@
         }
         if (counter) counter.textContent = '(' + list.length + ')';
         box.innerHTML = list.map(function (s) {
-          return '<div class="kotak-masuk-row" onclick="bukaDariKotakMasuk(\'' + s.NoRegistrasi + '\')">' +
+          return '<div class="kotak-masuk-row" data-noreg="' + s.NoRegistrasi + '" onclick="bukaDariKotakMasuk(\'' + s.NoRegistrasi + '\', this)">' +
             '  <div class="kotak-masuk-main">' +
             '    <span class="kotak-masuk-noreg">' + s.NoRegistrasi + '</span>' +
             '    <span class="kotak-masuk-perihal">' + s.Perihal + '</span>' +
@@ -734,6 +755,8 @@
             '  </div>' +
             '</div>';
         }).join('');
+        // Muat lebih awal alur 3 surat teratas (yang paling mungkin dibuka) agar pop up langsung terisi.
+        list.slice(0, 3).forEach(function (s, i) { setTimeout(function () { prefetchDisposisi(s.NoRegistrasi); }, 400 + i * 500); });
       })
       .withFailureHandler(function (err) {
         box.innerHTML = '<div class="empty-state">Terjadi kesalahan: ' + err.message + '</div>';
@@ -741,11 +764,45 @@
       .getSuratMenungguPersetujuan(CURRENT_USER.token);
   }
 
-  function bukaDariKotakMasuk(noReg) {
+  // Pop up langsung tampil: kepala surat diambil dari baris yang diklik (tanpa menunggu server),
+  // alur persetujuan menyusul begitu data tiba (atau seketika bila sudah dimuat lebih awal).
+  function bukaDariKotakMasuk(noReg, rowEl) {
     document.getElementById('inputNoRegDisposisi').value = noReg;
-    cariDisposisi();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    let kepala = '';
+    if (rowEl && rowEl.querySelector) {
+      const tx = function (sel) { const n = rowEl.querySelector(sel); return n ? n.textContent.trim() : ''; };
+      kepala = '<div class="no-reg-result">' +
+        '<div class="no">' + escHtmlQr(noReg) + '</div>' +
+        '<div class="perihal">' + escHtmlQr(tx('.kotak-masuk-perihal')) + '</div>' +
+        '<div class="perihal" style="opacity:.8;font-size:12px;">Menunggu: ' + escHtmlQr(tx('.kotak-masuk-side .pill')) + ' &middot; Masuk ' + escHtmlQr(tx('.kotak-masuk-tanggal')) + '</div>' +
+        '</div>';
+    }
+    cariDisposisi(kepala);
   }
+
+  // Muat data alur lebih awal begitu kursor berhenti / jari menyentuh baris (hasil masuk cache).
+  const SUDAH_PREFETCH_DISP = {};
+  function prefetchDisposisi(noReg) {
+    if (!noReg || SUDAH_PREFETCH_DISP[noReg]) return;
+    SUDAH_PREFETCH_DISP[noReg] = true;
+    setTimeout(function () { delete SUDAH_PREFETCH_DISP[noReg]; }, 60000);
+    try {
+      google.script.run.withSilentErrors()
+        .withSuccessHandler(function () {}).withFailureHandler(function () {})
+        .getTrackingByNoRegistrasi(noReg);
+    } catch (e) { /* abaikan */ }
+  }
+  (function () {
+    let tunda = null;
+    const barisDari = function (e) { return e.target.closest ? e.target.closest('.kotak-masuk-row') : null; };
+    document.addEventListener('mouseover', function (e) {
+      const r = barisDari(e); clearTimeout(tunda);
+      if (r) tunda = setTimeout(function () { prefetchDisposisi(r.getAttribute('data-noreg')); }, 100);
+    });
+    document.addEventListener('touchstart', function (e) {
+      const r = barisDari(e); if (r) prefetchDisposisi(r.getAttribute('data-noreg'));
+    }, { passive: true });
+  })();
 
   document.addEventListener('click', function (e) {
     if (e.target && e.target.id === 'btnCariDisposisi') cariDisposisi();
@@ -754,11 +811,13 @@
     if (e.target && e.target.id === 'inputNoRegDisposisi' && e.key === 'Enter') cariDisposisi();
   });
 
-  function cariDisposisi() {
+  function cariDisposisi(kepalaInstan) {
     const noReg = document.getElementById('inputNoRegDisposisi').value.trim();
     const box = document.getElementById('hasilDisposisi');
     if (!noReg) { showToast('Masukkan No Registrasi terlebih dahulu', 'error'); return; }
-    box.innerHTML = '<div class="empty-state">Mencari data...</div>';
+    box.innerHTML = (typeof kepalaInstan === 'string' && kepalaInstan)
+      ? kepalaInstan + '<div class="empty-state">Memuat alur persetujuan...</div>'
+      : '<div class="empty-state">Mencari data...</div>';
 
     google.script.run
       .withSuccessHandler(function (res) {
@@ -928,18 +987,220 @@
 
     btnKirim.addEventListener('click', function () {
       const link = btnKirim.dataset.walink;
+      const blob = QR_WA_BLOB; // sudah disiapkan saat modal dibuka (agar klik tetap dianggap aksi pengguna)
+      const noReg = (DATA_QR_TERAKHIR && DATA_QR_TERAKHIR.noRegistrasi) || 'surat';
+      const pesan = document.getElementById('notifWaPreview').textContent || '';
+
+      // Tanpa QR (mis. notifikasi tindakan persetujuan): perilaku lama.
+      if (!blob) {
+        if (link) window.open(link, '_blank');
+        tutup();
+        return;
+      }
+
+      const berkas = new File([blob], 'QR-' + String(noReg).replace(/[^\w-]+/g, '-') + '.png', { type: 'image/png' });
+      const adaHp = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      // HP: kirim foto QR + teks sekaligus lewat menu bagikan -> pilih WhatsApp.
+      if (adaHp && navigator.canShare && navigator.canShare({ files: [berkas] })) {
+        navigator.share({ files: [berkas], text: pesan }).then(tutup).catch(function (e) {
+          if (e && e.name === 'AbortError') return; // dibatalkan pengguna: modal tetap terbuka
+          if (link) window.open(link, '_blank');
+          tutup();
+        });
+        return;
+      }
+
+      // Komputer: buka chat WhatsApp pemohon + salin foto QR ke clipboard. WhatsApp tidak mengizinkan
+      // lampiran otomatis lewat tautan, jadi foto harus ditempel (Ctrl+V) di chat. Modal dibiarkan
+      // terbuka agar petunjuk & tombol "Salin ulang / Unduh" tetap terlihat.
       if (link) window.open(link, '_blank');
-      tutup();
+      const tip = document.getElementById('notifWaQrTip');
+      const status = document.getElementById('notifWaQrTipStatus');
+      if (tip) tip.style.display = 'block';
+      salinFotoQrWa(blob).then(function () {
+        if (status) status.textContent = '✅ Foto QR Code sudah disalin ke clipboard.';
+      }).catch(function () {
+        if (status) status.textContent = '⚠️ Foto tidak bisa disalin otomatis oleh browser. Klik "Unduh foto", lalu lampirkan manual di WhatsApp (ikon klip).';
+      });
+    });
+
+    const btnSalinUlang = document.getElementById('btnSalinUlangQr');
+    if (btnSalinUlang) btnSalinUlang.addEventListener('click', function () {
+      const status = document.getElementById('notifWaQrTipStatus');
+      if (!QR_WA_BLOB) return;
+      salinFotoQrWa(QR_WA_BLOB)
+        .then(function () { if (status) status.textContent = '✅ Foto QR Code disalin ulang. Tekan Ctrl+V di chat WhatsApp.'; })
+        .catch(function () { if (status) status.textContent = '⚠️ Gagal menyalin. Gunakan "Unduh foto".'; });
+    });
+    const btnUnduh = document.getElementById('btnUnduhQrWa');
+    if (btnUnduh) btnUnduh.addEventListener('click', function () {
+      if (!QR_WA_BLOB) return;
+      const noReg = (DATA_QR_TERAKHIR && DATA_QR_TERAKHIR.noRegistrasi) || 'surat';
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(QR_WA_BLOB);
+      a.download = 'QR-' + String(noReg).replace(/[^\w-]+/g, '-') + '.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    });
+
+    const btnQr = document.getElementById('btnCetakQrNotifWa');
+    if (btnQr) btnQr.addEventListener('click', function () {
+      if (DATA_QR_TERAKHIR) cetakQrThermal(DATA_QR_TERAKHIR);
     });
   }
 
-  function tampilkanKonfirmasiNotifWa(waInfo, noRegistrasi) {
+  /* ---------- Cetak QR Code tracking (kertas thermal / printer bluetooth) ---------- */
+  // Lebar kertas thermal dalam mm. Printer bluetooth umumnya 58 mm; ganti ke 80 bila memakai kertas 80 mm.
+  const LEBAR_KERTAS_THERMAL_MM = 58;
+  let DATA_QR_TERAKHIR = null; // { noRegistrasi, linkTracking, perihal, suratDariNama }
+
+  function escHtmlQr(t) {
+    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function cetakQrThermal(d) {
+    if (typeof QRCode === 'undefined') {
+      showToast('Pustaka QR Code belum termuat. Periksa koneksi internet lalu coba lagi.', 'error');
+      return;
+    }
+    // Buat QR di elemen sementara, lalu ambil sebagai gambar PNG
+    const tmp = document.createElement('div');
+    tmp.style.cssText = 'position:fixed;left:-9999px;top:0;';
+    document.body.appendChild(tmp);
+    new QRCode(tmp, { text: d.linkTracking, width: 320, height: 320, correctLevel: QRCode.CorrectLevel.M });
+    const canvas = tmp.querySelector('canvas');
+    const img = tmp.querySelector('img');
+    const dataUrl = canvas ? canvas.toDataURL('image/png') : (img ? img.src : '');
+    document.body.removeChild(tmp);
+    if (!dataUrl) { showToast('Gagal membuat QR Code.', 'error'); return; }
+
+    const w = LEBAR_KERTAS_THERMAL_MM;
+    const qrMm = Math.min(w - 12, 46);
+    const html =
+      '<!DOCTYPE html><html><head><meta charset="utf-8"><title>QR ' + escHtmlQr(d.noRegistrasi) + '</title><style>' +
+      '@page{size:' + w + 'mm auto;margin:0}' +
+      '*{box-sizing:border-box}' +
+      'html,body{margin:0;padding:0;background:#fff}' +
+      'body{width:' + w + 'mm;padding:3mm 3mm 8mm;font-family:Arial,Helvetica,sans-serif;color:#000;text-align:center}' +
+      '.judul{font-size:13pt;font-weight:bold;letter-spacing:1px}' +
+      '.instansi{font-size:8pt;margin-top:1mm}' +
+      '.garis{border-top:1px dashed #000;margin:2.5mm 0}' +
+      '.label{font-size:8pt}' +
+      '.noreg{font-size:11pt;font-weight:bold;margin-top:0.5mm;word-break:break-all}' +
+      '.perihal{font-size:8.5pt;margin-top:1.5mm;word-break:break-word}' +
+      'img{width:' + qrMm + 'mm;height:' + qrMm + 'mm;display:block;margin:2mm auto;image-rendering:pixelated}' +
+      '.ket{font-size:8.5pt;line-height:1.35;margin-top:1mm}' +
+      '.ket b{font-size:9pt}' +
+      '</style></head><body>' +
+      '<div class="judul">SPARTA</div>' +
+      '<div class="instansi">Sistem Pelayanan Administrasi Persuratan</div>' +
+      '<div class="garis"></div>' +
+      '<div class="label">No. Registrasi</div>' +
+      '<div class="noreg">' + escHtmlQr(d.noRegistrasi) + '</div>' +
+      (d.perihal ? '<div class="perihal">Perihal: ' + escHtmlQr(d.perihal) + '</div>' : '') +
+      '<img src="' + dataUrl + '" alt="QR Code">' +
+      '<div class="ket"><b>Scan QR Code untuk melihat status surat</b></div>' +
+      '<div class="garis"></div>' +
+      '<div class="ket">Jika surat sudah selesai, proses tanda terima juga bisa melalui QR Code ini.</div>' +
+      '</body></html>';
+
+    const ifr = document.createElement('iframe');
+    ifr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+    document.body.appendChild(ifr);
+    const doc = ifr.contentWindow.document;
+    doc.open(); doc.write(html); doc.close();
+    setTimeout(function () {
+      try { ifr.contentWindow.focus(); ifr.contentWindow.print(); }
+      catch (e) { showToast('Gagal membuka dialog cetak: ' + e.message, 'error'); }
+      setTimeout(function () { if (ifr.parentNode) ifr.parentNode.removeChild(ifr); }, 60000);
+    }, 400);
+  }
+
+  /* ---------- Foto QR Code untuk dilampirkan ke WhatsApp ---------- */
+  let QR_WA_BLOB = null;
+
+  function salinFotoQrWa(blob) {
+    if (!(navigator.clipboard && window.ClipboardItem)) return Promise.reject(new Error('Clipboard tidak didukung'));
+    return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+  }
+
+  function buatFotoQrWa(link, noRegistrasi, selesai) {
+    try {
+      if (typeof QRCode === 'undefined') { selesai(null, ''); return; }
+      const tmp = document.createElement('div');
+      tmp.style.cssText = 'position:fixed;left:-9999px;top:0;';
+      document.body.appendChild(tmp);
+      new QRCode(tmp, { text: link, width: 360, height: 360, correctLevel: QRCode.CorrectLevel.M });
+      const src = tmp.querySelector('canvas');
+      const img = tmp.querySelector('img');
+      const gambar = new Image();
+      gambar.onload = function () {
+        document.body.removeChild(tmp);
+        const c = document.createElement('canvas');
+        c.width = 480; c.height = 600;
+        const g = c.getContext('2d');
+        g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+        g.fillStyle = '#0b2540'; g.textAlign = 'center';
+        g.font = 'bold 30px Arial'; g.fillText('SPARTA', 240, 48);
+        g.font = '16px Arial'; g.fillText('Sistem Pelayanan Administrasi Persuratan', 240, 74);
+        g.font = 'bold 22px Arial'; g.fillText('No. Registrasi ' + noRegistrasi, 240, 118);
+        g.imageSmoothingEnabled = false;
+        g.drawImage(gambar, 60, 140, 360, 360);
+        g.font = 'bold 20px Arial'; g.fillText('Scan QR Code untuk melihat status surat', 240, 540);
+        g.font = '15px Arial'; g.fillText('Arahkan kamera HP ke kode di atas', 240, 568);
+        c.toBlob(function (b) { selesai(b, c.toDataURL('image/png')); }, 'image/png');
+      };
+      gambar.onerror = function () { document.body.removeChild(tmp); selesai(null, ''); };
+      gambar.src = src ? src.toDataURL('image/png') : (img ? img.src : '');
+    } catch (e) { selesai(null, ''); }
+  }
+
+  function tampilkanKonfirmasiNotifWa(waInfo, noRegistrasi, dariDaftar) {
     const overlay = document.getElementById('notifWaModalOverlay');
     const btnKirim = document.getElementById('btnKirimNotifWa');
     const warning = document.getElementById('notifWaNoHpWarning');
 
+    const dAwal = document.getElementById('notifWaDescAwal');
+    const dAkhir = document.getElementById('notifWaDescAkhir');
+    if (dAwal && dAkhir) {
+      if (dariDaftar === 'ambil') {
+        dAwal.textContent = 'Kirim pengingat pengambilan surat ';
+        dAkhir.textContent = ' ke pemohon melalui WhatsApp?';
+      } else {
+        dAwal.textContent = dariDaftar ? 'Kirim informasi status surat ' : 'Tindakan pada surat ';
+        dAkhir.textContent = dariDaftar ? ' ke pemohon melalui WhatsApp?' : ' berhasil disimpan. Kirim informasi ini ke pemohon surat melalui WhatsApp?';
+      }
+    }
+
     document.getElementById('notifWaNoRegistrasi').textContent = noRegistrasi;
     document.getElementById('notifWaPreview').textContent = waInfo.pesan;
+
+    // Tombol QR Code hanya muncul setelah simpan registrasi (server mengirim linkTracking)
+    const btnQr = document.getElementById('btnCetakQrNotifWa');
+    if (btnQr) {
+      if (waInfo.linkTracking) {
+        DATA_QR_TERAKHIR = { noRegistrasi: noRegistrasi, linkTracking: waInfo.linkTracking, perihal: waInfo.perihal || '', suratDariNama: waInfo.suratDariNama || '' };
+        btnQr.style.display = 'flex';
+      } else {
+        DATA_QR_TERAKHIR = null;
+        btnQr.style.display = 'none';
+      }
+    }
+
+    // Foto QR Code untuk dilampirkan ke WhatsApp (hanya untuk notifikasi registrasi)
+    QR_WA_BLOB = null;
+    const tipEl = document.getElementById('notifWaQrTip'); if (tipEl) tipEl.style.display = 'none';
+    const qrBox = document.getElementById('notifWaQrBox');
+    if (qrBox) qrBox.style.display = 'none';
+    if (waInfo.linkTracking) {
+      buatFotoQrWa(waInfo.linkTracking, noRegistrasi, function (blob, dataUrl) {
+        QR_WA_BLOB = blob;
+        const pv = document.getElementById('notifWaQrPreview');
+        if (blob && pv && qrBox) { pv.src = dataUrl; qrBox.style.display = 'block'; }
+      });
+    }
 
     if (waInfo.waLink) {
       btnKirim.dataset.walink = waInfo.waLink;
@@ -1000,19 +1261,37 @@
 
     const legend = items.map(function (i, idx) {
       const warna = SPARTA_CHART_PALETTE[idx % SPARTA_CHART_PALETTE.length];
-      return '<div class="donut-legend-item"><span class="dot" style="background:' + warna + ';"></span>' + i[labelKey] + ' (' + i[jumlahKey] + ')</div>';
+      const persen = total > 0 ? Math.round((i[jumlahKey] / total) * 100) : 0;
+      return '<div class="donut-legend-item"><span class="dot" style="background:' + warna + ';"></span>' + i[labelKey] + ' (' + persen + '%)</div>';
+    }).join('');
+
+    // Angka di atas tiap irisan: diletakkan di tengah ketebalan cincin sesuai sudut tengah irisan
+    // (conic-gradient mulai dari atas, searah jarum jam). Irisan < 3% tidak diberi angka agar tidak bertabrakan;
+    // nilainya tetap ada di legenda.
+    let kum = 0;
+    const angkaIrisan = items.map(function (i) {
+      const bagian = total > 0 ? i[jumlahKey] / total : 0;
+      const tengah = (kum + i[jumlahKey] / 2) / (total || 1);
+      kum += i[jumlahKey];
+      if (bagian < 0.03) return '';
+      const sudut = tengah * 2 * Math.PI;
+      const radius = 40; // % dari ukuran donat (tengah cincin)
+      const x = 50 + radius * Math.sin(sudut);
+      const y = 50 - radius * Math.cos(sudut);
+      return '<span class="donut-slice-label" style="left:' + x.toFixed(2) + '%;top:' + y.toFixed(2) + '%;">' + i[jumlahKey] + '</span>';
     }).join('');
 
     container.innerHTML =
       '<div class="donut-chart-wrap">' +
       '  <div class="donut-chart" style="background:conic-gradient(' + stops + ');">' +
-      '    <div class="donut-hole">' + total + '<br>Total</div>' +
+      angkaIrisan +
+      '    <div class="donut-hole"><div class="donut-total-num">' + total + '</div><div class="donut-total-text">Total</div></div>' +
       '  </div>' +
       '  <div class="donut-legend">' + legend + '</div>' +
       '</div>';
   }
 
-  // Grafik batang HORIZONTAL - dipakai untuk "Tahap Menunggu" dan "Kapasitas Lokasi".
+  // Grafik batang HORIZONTAL - dipakai untuk "Tahap Menunggu".
   // getWarna(item) opsional: fungsi untuk menentukan warna batang per baris (mis. sesuai persentase kapasitas).
   function renderHBarChart(container, items, labelFn, valueFn, displayFn, getWarna) {
     if (!items.length) {
@@ -1065,6 +1344,18 @@
 
     google.script.run
       .withSuccessHandler(function (stats) {
+        // Kelas grid menyesuaikan jumlah kotak: 4 kotak (role) atau 6 kotak (Admin TU)
+        grid.className = 'stats-grid' + (stats.papanRole ? ' stats-grid-role' : '');
+        // Akun selain Admin TU: tampilkan 4 papan sesuai role yang login
+        if (stats.papanRole) {
+          const p = stats.papanRole;
+          NOREG_FILTER_DASHBOARD = { disetujui: p.noRegDisetujui || [], ditolak: p.noRegDitolak || [] };
+          grid.innerHTML =
+            '<div class="stat-box stat-box-clickable" onclick="bukaDaftarSuratStatus(null)"><div class="num">' + p.total + '</div><div class="label">Total Surat Masuk</div></div>' +
+            '<div class="stat-box amber stat-box-clickable" onclick="bukaHalamanDisposisi()"><div class="num">' + p.menunggu + '</div><div class="label">Menunggu Persetujuan</div></div>' +
+            '<div class="stat-box green stat-box-clickable" onclick="bukaDaftarSuratStatus(\'ROLE_DISETUJUI\')"><div class="num">' + p.disetujui + '</div><div class="label">Disetujui</div></div>' +
+            '<div class="stat-box red stat-box-clickable" onclick="bukaDaftarSuratStatus(\'ROLE_DITOLAK\')"><div class="num">' + p.ditolak + '</div><div class="label">Ditolak / Perlu Perbaikan</div></div>';
+        } else {
         grid.innerHTML =
           '<div class="stat-box stat-box-clickable" onclick="bukaDaftarSuratStatus(null)"><div class="num">' + stats.total + '</div><div class="label">Total Surat</div></div>' +
           '<div class="stat-box amber stat-box-clickable" onclick="bukaDaftarSuratStatus(\'Dalam Proses\')"><div class="num">' + stats.dalamProses + '</div><div class="label">Dalam Proses</div></div>' +
@@ -1072,20 +1363,7 @@
           '<div class="stat-box red stat-box-clickable" onclick="bukaDaftarSuratStatus(\'DITOLAK_PERBAIKAN\')"><div class="num">' + (stats.ditolak + stats.perbaikan) + '</div><div class="label">Ditolak / Perlu Perbaikan</div></div>' +
           '<div class="stat-box stat-box-clickable" style="border-left-color:var(--navy-light);" onclick="bukaDaftarSuratStatus(\'Informasi (Tanpa Persetujuan)\')"><div class="num" style="color:var(--navy-light);">' + (stats.informasi || 0) + '</div><div class="label">Informasi (Undangan/Lainnya)</div></div>';
 
-        // Admin TU juga mengelola Pengarsipan, jadi tampilkan ringkasan "Siap Diarsipkan" di dashboard utama.
-        if (CURRENT_USER && CURRENT_USER.role === 'Admin TU') {
-          grid.innerHTML += '<div class="stat-box stat-box-clickable" style="border-left-color:var(--gold);" onclick="bukaMenuArsip(\'arsip\')"><div class="num" style="color:var(--gold);" id="statSiapArsipNum">-</div><div class="label">🗄️ Siap Diarsipkan</div></div>';
-          google.script.run
-            .withSuccessHandler(function (arsipStats) {
-              const el = document.getElementById('statSiapArsipNum');
-              if (el) el.textContent = arsipStats.siapDiarsipkan;
-            })
-            .withFailureHandler(function () { /* diamkan - tidak kritikal untuk dashboard utama */ })
-            .getDashboardArsipStats(CURRENT_USER.token);
-        }
-
-        // Kotak "Persentase Penyelesaian" versi ringkas - seukuran kotak statistik lain,
-        // supaya sejajar rapi dengan "Siap Diarsipkan" alih-alih jadi kartu besar terpisah.
+        // Kotak "Persentase Penyelesaian" versi ringkas - seukuran kotak statistik lain.
         const persen = stats.total > 0 ? Math.round((stats.disetujui / stats.total) * 100) : 0;
         grid.innerHTML +=
           '<div class="stat-box progress-stat-box" style="border-left-color:var(--gold);">' +
@@ -1098,9 +1376,10 @@
         // Hitung langsung dari kolom yang benar-benar dirender, baru rentangkan kotak persentase
         // (elemen terakhir) sampai ke ujung baris - supaya tidak ada ruang kosong tersisa.
         requestAnimationFrame(function () { sesuaikanLebarKotakPersentase(); });
+        }
 
         const boxBulan = document.getElementById('chartBulanSurat');
-        if (boxBulan) renderVBarChart(boxBulan, stats.perBulan.map(function (b) { return { label: b.label, jumlah: b.jumlah }; }));
+        if (boxBulan) renderVBarChart(boxBulan, stats.perBulan.map(function (b) { return { label: String(b.label).replace(/\s\d{2}(\d{2})$/, ' $1'), jumlah: b.jumlah }; }));
 
         const boxJenis = document.getElementById('chartJenisSurat');
         if (boxJenis) renderDonutChart(boxJenis, stats.perJenisSurat, 'jenis', 'jumlah');
@@ -1131,8 +1410,11 @@
    * ============================================================ */
 
   let DAFTAR_SURAT_CACHE = [];
-  let FILTER_BULAN_SEMUA_SURAT = ''; // '' = semua | 'yyyy-M' (mis. '2026-7') | 'kosong' = tanggal tidak terbaca
+  let FILTER_BULAN_SEMUA_SURAT = ''; // '' = semua bulan | '1'..'12'
+  let FILTER_TAHUN_SEMUA_SURAT = ''; // '' = semua tahun | 'yyyy' | 'kosong' = tanggal tidak terbaca
   const NAMA_BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const NAMA_BULAN_SINGKAT = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  let NOREG_FILTER_DASHBOARD = { disetujui: [], ditolak: [] }; // No Registrasi untuk papan dashboard per role
   let STATUS_FILTER_AKTIF = null; // null | 'Dalam Proses' | 'Selesai / Disetujui' | 'DITOLAK_PERBAIKAN' | 'Informasi (Tanpa Persetujuan)'
 
   // Kunci bulan 'yyyy-M' sebuah surat. Memakai BulanKey dari server; bila belum ada (data cache lama), turunkan dari teks d/M/yyyy.
@@ -1142,38 +1424,77 @@
     return m ? (m[3] + '-' + Number(m[2])) : '';
   }
 
-  // Isi pilihan Filter Bulan dari SELURUH data yang diterima dari server (bukan dari baris yang tampil).
-  function isiOpsiFilterBulanSemuaSurat() {
-    const sel = document.getElementById('filterBulanSemuaSurat');
-    if (!sel) return;
-    const ada = {}; let adaKosong = false;
-    DAFTAR_SURAT_CACHE.forEach(function (s) {
-      const k = bulanKeySurat(s);
-      if (k) ada[k] = true; else adaKosong = true;
-    });
-    const keys = Object.keys(ada).sort(function (a, b) {
-      const pa = a.split('-'), pb = b.split('-');
-      return (Number(pb[0]) - Number(pa[0])) || (Number(pb[1]) - Number(pa[1]));
-    });
-    let html = '<option value="">Semua Bulan</option>';
-    keys.forEach(function (k) {
-      const p = k.split('-');
-      html += '<option value="' + k + '">' + NAMA_BULAN_ID[Number(p[1]) - 1] + ' ' + p[0] + '</option>';
-    });
-    if (adaKosong) html += '<option value="kosong">(Tanggal tidak terbaca)</option>';
-    sel.innerHTML = html;
-    if (FILTER_BULAN_SEMUA_SURAT && (ada[FILTER_BULAN_SEMUA_SURAT] || (FILTER_BULAN_SEMUA_SURAT === 'kosong' && adaKosong))) {
-      sel.value = FILTER_BULAN_SEMUA_SURAT;
-    } else {
-      FILTER_BULAN_SEMUA_SURAT = '';
-      sel.value = '';
+  // Filter Bulan & Tahun: dua dropdown biasa, sama seperti menu Laporan Bulanan.
+  // Bulan sudah lengkap di HTML (Semua Bulan + Januari-Desember). Tahun: Semua Tahun, tahun berjalan s/d +2
+  // (mis. 2026, 2027, 2028) ditambah tahun lain yang ada di data surat.
+  // Pastikan dua dropdown (Bulan & Tahun) benar-benar ada, apa pun versi index.html yang terpasang
+  // (mis. index.html lama berisi kotak popup / belum diganti) - dibuat langsung dari sini bila perlu.
+  function pastikanDropdownFilterSurat() {
+    let selB = document.getElementById('filterBulanSemuaSurat');
+    if (!selB) return;
+    if (selB.tagName !== 'SELECT') { // HTML lama: elemen ini berupa <div> pembungkus kotak popup
+      const wadah = selB;
+      wadah.className = ''; wadah.removeAttribute('style');
+      let opsiBulan = '<option value="">Semua Bulan</option>';
+      NAMA_BULAN_ID.forEach(function (n, i) { opsiBulan += '<option value="' + (i + 1) + '">' + n + '</option>'; });
+      wadah.id = 'wadahFilterBulanTahunSemuaSurat';
+      wadah.innerHTML = '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+        '<div class="field"><label>Bulan</label><select id="filterBulanSemuaSurat">' + opsiBulan + '</select></div>' +
+        '<div class="field"><label>Tahun</label><select id="filterTahunSemuaSurat"><option value="">Semua Tahun</option></select></div></div>';
+      const labelLama = wadah.parentNode && wadah.parentNode.querySelector('label');
+      if (labelLama && labelLama.parentNode === wadah.parentNode) labelLama.style.display = 'none';
+      return;
+    }
+    if (!document.getElementById('filterTahunSemuaSurat')) { // hanya dropdown Bulan yang ada -> tambahkan Tahun
+      const f = document.createElement('div');
+      f.className = 'field';
+      f.innerHTML = '<label>Tahun</label><select id="filterTahunSemuaSurat"><option value="">Semua Tahun</option></select>';
+      const indukBulan = selB.parentNode;
+      indukBulan.parentNode.insertBefore(f, indukBulan.nextSibling);
     }
   }
+
+  function isiOpsiFilterBulanSemuaSurat() {
+    pastikanDropdownFilterSurat();
+    const selT = document.getElementById('filterTahunSemuaSurat');
+    if (!selT) return;
+    const t = new Date().getFullYear(), set = {}; let adaKosong = false;
+    for (let i = t; i <= t + 2; i++) set[i] = true;
+    DAFTAR_SURAT_CACHE.forEach(function (s) {
+      const k = bulanKeySurat(s);
+      if (k) set[k.split('-')[0]] = true; else adaKosong = true;
+    });
+    let html = '<option value="">Semua Tahun</option>';
+    Object.keys(set).sort().forEach(function (th) { html += '<option value="' + th + '">' + th + '</option>'; });
+    if (adaKosong) html += '<option value="kosong">(Tanggal tidak terbaca)</option>';
+    selT.innerHTML = html;
+    const ada = FILTER_TAHUN_SEMUA_SURAT && Array.prototype.some.call(selT.options, function (o) { return o.value === FILTER_TAHUN_SEMUA_SURAT; });
+    if (!ada) FILTER_TAHUN_SEMUA_SURAT = '';
+    selT.value = FILTER_TAHUN_SEMUA_SURAT;
+    const selB = document.getElementById('filterBulanSemuaSurat');
+    if (selB) selB.value = FILTER_BULAN_SEMUA_SURAT;
+  }
+
+  document.addEventListener('change', function (e) {
+    if (!e.target) return;
+    if (e.target.id === 'filterBulanSemuaSurat') {
+      FILTER_BULAN_SEMUA_SURAT = e.target.value || '';
+      terapkanFilterSemuaSurat();
+    } else if (e.target.id === 'filterTahunSemuaSurat') {
+      FILTER_TAHUN_SEMUA_SURAT = e.target.value || '';
+      if (FILTER_TAHUN_SEMUA_SURAT === 'kosong') { // bulan tidak berlaku untuk tanggal tak terbaca
+        FILTER_BULAN_SEMUA_SURAT = '';
+        const sb = document.getElementById('filterBulanSemuaSurat'); if (sb) sb.value = '';
+      }
+      terapkanFilterSemuaSurat();
+    }
+  });
 
   function loadDaftarSuratMasuk() {
     const tbody = document.querySelector('#tabelSemuaSurat tbody');
     const counter = document.getElementById('jumlahSemuaSurat');
     tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Memuat data...</td></tr>';
+    isiOpsiFilterBulanSemuaSurat(); // tombol bulan & pilihan tahun langsung tampil selagi data dimuat
 
     google.script.run
       .withSuccessHandler(function (list) {
@@ -1195,7 +1516,14 @@
     if (navItem) navItem.click();
   }
 
+  function bukaHalamanDisposisi() {
+    const navItem = document.querySelector('.nav-item[data-page="disposisi"]');
+    if (navItem) navItem.click();
+  }
+
   function labelFilterStatus(f) {
+    if (f === 'ROLE_DISETUJUI') return 'Disetujui oleh saya';
+    if (f === 'ROLE_DITOLAK') return 'Ditolak / Perlu Perbaikan oleh saya';
     if (f === 'DITOLAK_PERBAIKAN') return 'Ditolak / Perlu Perbaikan';
     return f;
   }
@@ -1206,17 +1534,25 @@
     const searchInput = document.getElementById('cariSemuaSurat');
 
     let list = DAFTAR_SURAT_CACHE;
-    if (STATUS_FILTER_AKTIF === 'DITOLAK_PERBAIKAN') {
+    if (STATUS_FILTER_AKTIF === 'ROLE_DISETUJUI' || STATUS_FILTER_AKTIF === 'ROLE_DITOLAK') {
+      const daftarNoReg = STATUS_FILTER_AKTIF === 'ROLE_DISETUJUI' ? NOREG_FILTER_DASHBOARD.disetujui : NOREG_FILTER_DASHBOARD.ditolak;
+      list = list.filter(function (s) { return daftarNoReg.indexOf(String(s.NoRegistrasi).trim()) !== -1; });
+    } else if (STATUS_FILTER_AKTIF === 'DITOLAK_PERBAIKAN') {
       list = list.filter(function (s) { return s.StatusAkhir === 'Ditolak' || s.StatusAkhir === 'Perlu Perbaikan'; });
     } else if (STATUS_FILTER_AKTIF) {
       list = list.filter(function (s) { return s.StatusAkhir === STATUS_FILTER_AKTIF; });
     }
 
-    // Filter Bulan
-    if (FILTER_BULAN_SEMUA_SURAT === 'kosong') {
+    // Filter Tahun & Filter Bulan (berdiri sendiri-sendiri, bisa dikombinasikan)
+    if (FILTER_TAHUN_SEMUA_SURAT === 'kosong') {
       list = list.filter(function (s) { return !bulanKeySurat(s); });
-    } else if (FILTER_BULAN_SEMUA_SURAT) {
-      list = list.filter(function (s) { return bulanKeySurat(s) === FILTER_BULAN_SEMUA_SURAT; });
+    } else {
+      if (FILTER_TAHUN_SEMUA_SURAT) {
+        list = list.filter(function (s) { return bulanKeySurat(s).split('-')[0] === FILTER_TAHUN_SEMUA_SURAT; });
+      }
+      if (FILTER_BULAN_SEMUA_SURAT) {
+        list = list.filter(function (s) { return bulanKeySurat(s).split('-')[1] === FILTER_BULAN_SEMUA_SURAT; });
+      }
     }
 
     // Terapkan juga kata kunci pencarian teks (kalau ada) di atas hasil filter status
@@ -1236,13 +1572,27 @@
         chip.style.display = 'none';
       }
     }
-    if (counter) counter.textContent = 'Total: ' + list.length + ' surat' + ((STATUS_FILTER_AKTIF || FILTER_BULAN_SEMUA_SURAT) ? ' (terfilter)' : '');
+    if (counter) counter.textContent = 'Total: ' + list.length + ' surat' + ((STATUS_FILTER_AKTIF || FILTER_BULAN_SEMUA_SURAT || FILTER_TAHUN_SEMUA_SURAT) ? ' (terfilter)' : '');
 
+    BATAS_TAMPIL_SURAT = UKURAN_HALAMAN_SURAT; // filter/pencarian/muat ulang -> mulai dari halaman pertama
     renderTabelSemuaSurat(list);
+  }
+
+  // Menggambar ribuan baris sekaligus membuat browser macet -> tampilkan bertahap.
+  const UKURAN_HALAMAN_SURAT = 50;
+  let BATAS_TAMPIL_SURAT = UKURAN_HALAMAN_SURAT;
+  let SURAT_TERFILTER = [];
+
+  function tampilkanLebihBanyakSurat() {
+    BATAS_TAMPIL_SURAT += UKURAN_HALAMAN_SURAT;
+    renderTabelSemuaSurat(SURAT_TERFILTER);
   }
 
   function renderTabelSemuaSurat(list) {
     const tbody = document.querySelector('#tabelSemuaSurat tbody');
+    SURAT_TERFILTER = list;
+    const totalList = list.length;
+    if (totalList > BATAS_TAMPIL_SURAT) list = list.slice(0, BATAS_TAMPIL_SURAT);
     if (!list.length) {
       tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Tidak ada data yang cocok.</td></tr>';
       return;
@@ -1251,9 +1601,10 @@
     tbody.innerHTML = list.map(function (s) {
       const noRegEsc = s.NoRegistrasi.replace(/'/g, "\\'");
       const aksi = bisaKelola
-        ? '<div style="display:flex;gap:6px;">' +
+        ? '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
             '<button class="btn btn-outline btn-sm" onclick="bukaEditSurat(\'' + noRegEsc + '\')">✏️ Edit</button>' +
             '<button class="btn btn-reject btn-sm" onclick="hapusSuratMasuk(\'' + noRegEsc + '\')">🗑️ Hapus</button>' +
+            '<button class="btn btn-wa btn-sm" onclick="kirimWaDariDaftar(\'' + noRegEsc + '\', this)">' + IKON_WA_SVG + 'Kirim WhatsApp</button>' +
           '</div>'
         : '<span class="tahap-meta">-</span>';
       return '<tr>' +
@@ -1267,7 +1618,10 @@
         '<td><span class="pill ' + statusPillClass(s.StatusAkhir) + '">' + s.StatusAkhir + '</span></td>' +
         '<td>' + aksi + '</td>' +
         '</tr>';
-    }).join('');
+    }).join('') + (totalList > list.length
+      ? '<tr><td colspan="9" style="text-align:center;padding:14px;"><button type="button" class="btn btn-outline" onclick="tampilkanLebihBanyakSurat()">Tampilkan ' +
+        Math.min(UKURAN_HALAMAN_SURAT, totalList - list.length) + ' lagi (' + list.length + ' dari ' + totalList + ' ditampilkan)</button></td></tr>'
+      : '');
   }
 
   /* ============================================================
@@ -1275,6 +1629,68 @@
    * ============================================================ */
 
   let SURAT_SELESAI_CACHE = [];
+  let FILTER_BULAN_SURAT_SELESAI = '';
+  let FILTER_TAHUN_SURAT_SELESAI = '';
+  let FILTER_PENGAMBILAN_SURAT_SELESAI = ''; // '' = semua | 'belum' | 'sudah'
+
+  // Kunci 'yyyy-M' dari Tanggal Selesai (teks d/M/yyyy). Kosong bila surat belum punya tanggal selesai ('-').
+  function bulanKeySelesai(s) {
+    const m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s.TanggalSelesai || '');
+    return m ? (m[3] + '-' + Number(m[2])) : '';
+  }
+
+  // Pilihan Tahun: tahun berjalan s/d +2, ditambah tahun lain yang ada di data (sama seperti Daftar Surat Masuk)
+  function isiOpsiTahunSuratSelesai() {
+    const selT = document.getElementById('filterTahunSuratSelesai');
+    if (!selT) return;
+    const t = new Date().getFullYear(), set = {}; let adaKosong = false;
+    for (let i = t; i <= t + 2; i++) set[i] = true;
+    SURAT_SELESAI_CACHE.forEach(function (s) {
+      const k = bulanKeySelesai(s);
+      if (k) set[k.split('-')[0]] = true; else adaKosong = true;
+    });
+    let html = '<option value="">Semua Tahun</option>';
+    Object.keys(set).sort().forEach(function (th) { html += '<option value="' + th + '">' + th + '</option>'; });
+    if (adaKosong) html += '<option value="kosong">(Tanggal tidak terbaca)</option>';
+    selT.innerHTML = html;
+    const ada = FILTER_TAHUN_SURAT_SELESAI && Array.prototype.some.call(selT.options, function (o) { return o.value === FILTER_TAHUN_SURAT_SELESAI; });
+    if (!ada) FILTER_TAHUN_SURAT_SELESAI = '';
+    selT.value = FILTER_TAHUN_SURAT_SELESAI;
+    const selB = document.getElementById('filterBulanSuratSelesai');
+    if (selB) selB.value = FILTER_BULAN_SURAT_SELESAI;
+  }
+
+  // Gabungan filter Bulan + Tahun (berdasarkan Tanggal Selesai) + Cari Cepat
+  function terapkanFilterSuratSelesai() {
+    const counter = document.getElementById('jumlahSuratSelesai');
+    const cari = document.getElementById('cariSuratSelesai');
+    let list = SURAT_SELESAI_CACHE;
+
+    if (FILTER_TAHUN_SURAT_SELESAI === 'kosong') {
+      list = list.filter(function (s) { return !bulanKeySelesai(s); });
+    } else {
+      if (FILTER_TAHUN_SURAT_SELESAI) {
+        list = list.filter(function (s) { return bulanKeySelesai(s).split('-')[0] === FILTER_TAHUN_SURAT_SELESAI; });
+      }
+      if (FILTER_BULAN_SURAT_SELESAI) {
+        list = list.filter(function (s) { return bulanKeySelesai(s).split('-')[1] === FILTER_BULAN_SURAT_SELESAI; });
+      }
+    }
+
+    if (FILTER_PENGAMBILAN_SURAT_SELESAI === 'belum') list = list.filter(function (s) { return !s.SudahDiambil; });
+    else if (FILTER_PENGAMBILAN_SURAT_SELESAI === 'sudah') list = list.filter(function (s) { return !!s.SudahDiambil; });
+
+    const kw = cari ? cari.value.trim().toLowerCase() : '';
+    if (kw) {
+      list = list.filter(function (s) {
+        return (s.NoRegistrasi + ' ' + s.Perihal + ' ' + s.NamaPenerima + ' ' + s.JenisSurat).toLowerCase().indexOf(kw) !== -1;
+      });
+    }
+
+    const terfilter = !!(kw || FILTER_BULAN_SURAT_SELESAI || FILTER_TAHUN_SURAT_SELESAI || FILTER_PENGAMBILAN_SURAT_SELESAI);
+    if (counter) counter.textContent = 'Total: ' + list.length + ' surat' + (terfilter ? ' (terfilter)' : '');
+    renderTabelSuratSelesai(list, terfilter);
+  }
 
   function loadSuratSelesai() {
     const tbody = document.querySelector('#tabelSuratSelesai tbody');
@@ -1286,8 +1702,8 @@
       .withSuccessHandler(function (list) {
         try {
           SURAT_SELESAI_CACHE = list || [];
-          if (counter) counter.textContent = 'Total: ' + SURAT_SELESAI_CACHE.length + ' surat';
-          renderTabelSuratSelesai(SURAT_SELESAI_CACHE);
+          isiOpsiTahunSuratSelesai();
+          terapkanFilterSuratSelesai();
         } catch (clientErr) {
           console.error('Error render Surat Selesai:', clientErr);
           tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Terjadi kesalahan saat menampilkan data: ' + clientErr.message + '</td></tr>';
@@ -1300,10 +1716,10 @@
       .getSuratSelesai(CURRENT_USER.token);
   }
 
-  function renderTabelSuratSelesai(list) {
+  function renderTabelSuratSelesai(list, terfilter) {
     const tbody = document.querySelector('#tabelSuratSelesai tbody');
     if (!list.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Belum ada surat yang selesai.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">' + (terfilter ? 'Tidak ada surat selesai yang cocok dengan filter.' : 'Belum ada surat yang selesai.') + '</td></tr>';
       return;
     }
     const isAdmin = CURRENT_USER && CURRENT_USER.role === 'Admin TU';
@@ -1312,21 +1728,13 @@
         ? '<span class="pill pill-selesai">Sudah Diambil</span>'
         : '<span class="pill pill-proses">Belum Diambil</span>';
       const noRegEsc = s.NoRegistrasi.replace(/'/g, "\\'");
-      const perihalEsc = s.Perihal.replace(/'/g, "\\'");
 
       let aksi = '';
       if (isAdmin) {
         const tombol = [];
         if (!s.SudahDiambil) {
           tombol.push('<button class="btn btn-primary btn-sm" onclick="bukaKonfirmasiDiambilAdmin(\'' + noRegEsc + '\')">📦 Sudah Diambil</button>');
-        }
-        // Arsipkan hanya untuk surat berstatus Selesai (bukan Informasi/Undangan/Lainnya),
-        // dan hanya kalau belum diarsipkan maupun belum diambil - sama seperti aturan di menu Pengarsipan.
-        if (s.StatusAkhir === 'Selesai / Disetujui' && !s.SudahArsipkan && !s.SudahDiambil) {
-          tombol.push('<button class="btn btn-outline btn-sm" onclick="bukaModalArsipkan(\'' + noRegEsc + '\', \'' + perihalEsc + '\')">🗄️ Arsipkan</button>');
-        }
-        if (s.SudahArsipkan) {
-          tombol.push('<span class="pill pill-info">Sudah Diarsipkan</span>');
+          tombol.push('<button class="btn btn-wa btn-sm" onclick="kirimWaDariDaftar(\'' + noRegEsc + '\', this, \'ambil\')">' + IKON_WA_SVG + 'Kirim WhatsApp</button>');
         }
         aksi = tombol.length ? '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + tombol.join('') + '</div>' : '<span class="tahap-meta">-</span>';
       } else {
@@ -1367,609 +1775,30 @@
   }
 
   document.addEventListener('input', function (e) {
-    if (e.target && e.target.id === 'cariSuratSelesai') {
-      const kw = e.target.value.trim().toLowerCase();
-      if (!kw) { renderTabelSuratSelesai(SURAT_SELESAI_CACHE); return; }
-      const filtered = SURAT_SELESAI_CACHE.filter(function (s) {
-        return (s.NoRegistrasi + ' ' + s.Perihal + ' ' + s.NamaPenerima + ' ' + s.JenisSurat)
-          .toLowerCase().indexOf(kw) !== -1;
-      });
-      renderTabelSuratSelesai(filtered);
+    if (e.target && e.target.id === 'cariSuratSelesai') terapkanFilterSuratSelesai();
+  });
+
+  document.addEventListener('change', function (e) {
+    if (!e.target) return;
+    if (e.target.id === 'filterBulanSuratSelesai') {
+      FILTER_BULAN_SURAT_SELESAI = e.target.value || '';
+      terapkanFilterSuratSelesai();
+    } else if (e.target.id === 'filterPengambilanSuratSelesai') {
+      FILTER_PENGAMBILAN_SURAT_SELESAI = e.target.value || '';
+      terapkanFilterSuratSelesai();
+    } else if (e.target.id === 'filterTahunSuratSelesai') {
+      FILTER_TAHUN_SURAT_SELESAI = e.target.value || '';
+      if (FILTER_TAHUN_SURAT_SELESAI === 'kosong') { // bulan tidak berlaku untuk tanggal tak terbaca
+        FILTER_BULAN_SURAT_SELESAI = '';
+        const sb = document.getElementById('filterBulanSuratSelesai'); if (sb) sb.value = '';
+      }
+      terapkanFilterSuratSelesai();
     }
   });
 
   document.addEventListener('click', function (e) {
     if (e.target && e.target.id === 'btnRefreshSuratSelesai') loadSuratSelesai();
   });
-
-  /* ============================================================
-   *  ARSIP DOKUMEN (khusus role "Petugas Arsip")
-   * ============================================================ */
-
-  let SIAP_ARSIP_CACHE = [];
-  let DAFTAR_ARSIP_CACHE = [];
-  let KATEGORI_ARSIP_CACHE = [];
-  let LOKASI_ARSIP_CACHE = [];
-
-  function loadHalamanArsip() {
-    loadSuratSiapArsip();
-    loadDaftarArsip();
-    google.script.run
-      .withSuccessHandler(function (list) { KATEGORI_ARSIP_CACHE = list || []; })
-      .withFailureHandler(function () { /* diamkan - field tetap bisa diketik manual */ })
-      .getMasterKategoriArsip(CURRENT_USER.token);
-  }
-
-  function loadSuratSiapArsip() {
-    const tbody = document.querySelector('#tabelSiapArsip tbody');
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Memuat data...</td></tr>';
-
-    google.script.run
-      .withSuccessHandler(function (list) {
-        SIAP_ARSIP_CACHE = list || [];
-        renderTabelSiapArsip(SIAP_ARSIP_CACHE);
-      })
-      .withFailureHandler(function (err) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Gagal memuat data: ' + err.message + '</td></tr>';
-      })
-      .getSuratSiapArsip(CURRENT_USER.token);
-  }
-
-  function renderTabelSiapArsip(list) {
-    const tbody = document.querySelector('#tabelSiapArsip tbody');
-    if (!list.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Semua surat yang sudah selesai sudah diarsipkan. 🎉</td></tr>';
-      return;
-    }
-    tbody.innerHTML = list.map(function (s) {
-      const noRegEsc = s.NoRegistrasi.replace(/'/g, "\\'");
-      const perihalEsc = s.Perihal.replace(/'/g, "\\'");
-      const aksi = '<button class="btn btn-primary btn-sm" onclick="bukaModalArsipkan(\'' + noRegEsc + '\', \'' + perihalEsc + '\')">🗄️ Arsipkan</button>';
-      return '<tr>' +
-        '<td>' + s.NoRegistrasi + '</td>' +
-        '<td>' + s.Perihal + '</td>' +
-        '<td>' + s.JenisSurat + '</td>' +
-        '<td><span class="pill ' + statusPillClass(s.StatusAkhir) + '">' + s.StatusAkhir + '</span></td>' +
-        '<td>' + s.TanggalMasuk + '</td>' +
-        '<td>' + aksi + '</td>' +
-        '</tr>';
-    }).join('');
-  }
-
-  function loadDaftarArsip() {
-    const tbody = document.querySelector('#tabelArsip tbody');
-    const counter = document.getElementById('jumlahArsip');
-    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Memuat data...</td></tr>';
-    if (counter) counter.textContent = '';
-
-    google.script.run
-      .withSuccessHandler(function (list) {
-        DAFTAR_ARSIP_CACHE = list || [];
-        if (counter) counter.textContent = 'Total: ' + DAFTAR_ARSIP_CACHE.length + ' arsip';
-        renderTabelArsip(DAFTAR_ARSIP_CACHE);
-      })
-      .withFailureHandler(function (err) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Gagal memuat data: ' + err.message + '</td></tr>';
-        if (counter) counter.textContent = '';
-      })
-      .getDaftarArsip(CURRENT_USER.token);
-  }
-
-  function renderTabelArsip(list) {
-    const tbody = document.querySelector('#tabelArsip tbody');
-    if (!list.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Belum ada surat yang diarsipkan.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = list.map(function (s) {
-      const arsipIdEsc = s.ArsipId.replace(/'/g, "\\'");
-      const aksi = '<button class="btn btn-reject btn-sm" onclick="batalkanArsipUi(\'' + arsipIdEsc + '\')">↩️ Batalkan</button>';
-      const sumberPill = s.Sumber === 'Manual'
-        ? '<span class="pill pill-info">Manual</span>'
-        : '<span class="pill pill-selesai">Sistem</span>';
-      return '<tr>' +
-        '<td>' + (s.NoRegistrasi || '-') + '</td>' +
-        '<td>' + (s.NomorArsip || '-') + '</td>' +
-        '<td>' + s.Perihal + '</td>' +
-        '<td>' + s.KategoriArsip + '</td>' +
-        '<td>' + (s.KodeLokasi || '-') + '</td>' +
-        '<td>' + s.TanggalArsip + '</td>' +
-        '<td>' + sumberPill + '</td>' +
-        '<td>' + s.DiarsipkanOleh + '</td>' +
-        '<td>' + aksi + '</td>' +
-        '</tr>';
-    }).join('');
-  }
-
-  document.addEventListener('input', function (e) {
-    if (e.target && e.target.id === 'cariArsip') {
-      const kw = e.target.value.trim().toLowerCase();
-      if (!kw) { renderTabelArsip(DAFTAR_ARSIP_CACHE); return; }
-      const filtered = DAFTAR_ARSIP_CACHE.filter(function (s) {
-        return (s.NoRegistrasi + ' ' + s.Perihal + ' ' + s.NomorArsip + ' ' + s.KategoriArsip + ' ' + s.KodeLokasi)
-          .toLowerCase().indexOf(kw) !== -1;
-      });
-      renderTabelArsip(filtered);
-    }
-  });
-
-  document.addEventListener('click', function (e) {
-    if (e.target && e.target.id === 'btnRefreshArsip') loadDaftarArsip();
-  });
-
-  // Mengisi ulang dropdown "Kode Lokasi" pada kedua modal (Arsipkan & Tambah Manual) dari cache terbaru.
-  function isiPilihanLokasiArsip() {
-    const opsi = '<option value="">-- Belum ditentukan --</option>' + LOKASI_ARSIP_CACHE.map(function (l) {
-      return '<option value="' + l.KodeLokasi + '">' + l.KodeLokasi + ' - ' + l.NamaLokasi + ' (' + l.Terpakai + '/' + l.KapasitasMaksimal + ')</option>';
-    }).join('');
-    const selArsip = document.getElementById('arsipKodeLokasi');
-    const selManual = document.getElementById('manualKodeLokasi');
-    if (selArsip) selArsip.innerHTML = opsi;
-    if (selManual) selManual.innerHTML = opsi;
-  }
-
-  // Dipanggil dari tombol "Arsipkan" pada tabel Surat Siap Diarsipkan.
-  function bukaModalArsipkan(noRegistrasi, perihal) {
-    const overlay = document.getElementById('arsipkanModalOverlay');
-    document.getElementById('arsipNoRegistrasi').value = noRegistrasi;
-    document.getElementById('arsipkanInfoSurat').textContent = noRegistrasi + ' — ' + perihal;
-    document.getElementById('arsipNomorArsip').value = '';
-    document.getElementById('arsipKodeLokasi').value = '';
-    document.getElementById('arsipKategoriArsip').value = '';
-    document.getElementById('arsipKeterangan').value = '';
-
-    // Kalau modal ini dibuka dari halaman yang belum pernah memuat data lokasi/kategori
-    // (mis. Admin TU langsung dari Surat Selesai, tanpa mampir ke menu Pengarsipan dulu),
-    // pastikan cache-nya dimuat dulu supaya dropdown Kode Lokasi & saran kategori tidak kosong.
-    if (!LOKASI_ARSIP_CACHE.length) loadDaftarLokasiArsip();
-    if (!KATEGORI_ARSIP_CACHE.length) {
-      google.script.run
-        .withSuccessHandler(function (list) { KATEGORI_ARSIP_CACHE = list || []; })
-        .withFailureHandler(function () { /* diamkan - field tetap bisa diketik manual */ })
-        .getMasterKategoriArsip(CURRENT_USER.token);
-    }
-
-    isiPilihanLokasiArsip();
-    initKategoriArsipAutocomplete('arsipKategoriArsip');
-    overlay.classList.add('show');
-  }
-
-  // Komponen autocomplete kustom untuk Kategori Arsip (mirip pola SKPD) - saran berdasarkan
-  // kategori yang pernah dipakai sebelumnya, tapi tetap bebas diketik manual.
-  function initKategoriArsipAutocomplete(inputId) {
-    const input = document.getElementById(inputId);
-    if (!input || input.dataset.acBound === '1') return;
-    input.dataset.acBound = '1';
-
-    const parent = input.parentElement;
-    parent.style.position = 'relative';
-
-    const box = document.createElement('div');
-    box.className = 'skpd-suggest-box';
-    parent.appendChild(box);
-
-    function render(filterText) {
-      const kw = (filterText || '').trim().toLowerCase();
-      const matches = KATEGORI_ARSIP_CACHE.filter(function (n) {
-        return !kw || n.toLowerCase().indexOf(kw) !== -1;
-      });
-      if (!matches.length) { box.classList.remove('show'); return; }
-      box.innerHTML = matches.map(function (n) {
-        return '<div class="skpd-suggest-item">' + n.replace(/</g, '&lt;') + '</div>';
-      }).join('');
-      box.classList.add('show');
-    }
-
-    input.addEventListener('focus', function () { render(input.value); });
-    input.addEventListener('input', function () { render(input.value); });
-    input.addEventListener('blur', function () { setTimeout(function () { box.classList.remove('show'); }, 150); });
-
-    box.addEventListener('mousedown', function (e) {
-      const item = e.target.closest('.skpd-suggest-item');
-      if (!item) return;
-      input.value = item.textContent;
-      box.classList.remove('show');
-    });
-  }
-
-  function initArsipkanModal() {
-    const overlay = document.getElementById('arsipkanModalOverlay');
-    const btnClose = document.getElementById('btnTutupArsipkan');
-    const btnBatal = document.getElementById('btnBatalArsipkan');
-    const btnSimpan = document.getElementById('btnSimpanArsip');
-    if (!overlay || overlay.dataset.bound === '1') return;
-    overlay.dataset.bound = '1';
-
-    function tutup() { overlay.classList.remove('show'); }
-    btnClose.addEventListener('click', tutup);
-    btnBatal.addEventListener('click', tutup);
-    overlay.addEventListener('click', function (e) { if (e.target === overlay) tutup(); });
-
-    btnSimpan.addEventListener('click', function () {
-      const kategori = document.getElementById('arsipKategoriArsip').value.trim();
-      if (!kategori) {
-        showToast('Kategori arsip wajib diisi.', 'error');
-        return;
-      }
-
-      const payload = {
-        noRegistrasi: document.getElementById('arsipNoRegistrasi').value,
-        nomorArsip: document.getElementById('arsipNomorArsip').value.trim(),
-        kategoriArsip: kategori,
-        kodeLokasi: document.getElementById('arsipKodeLokasi').value,
-        keterangan: document.getElementById('arsipKeterangan').value.trim()
-      };
-
-      btnSimpan.disabled = true;
-      btnSimpan.innerHTML = '<span class="spinner"></span> Menyimpan...';
-
-      google.script.run
-        .withSuccessHandler(function () {
-          btnSimpan.disabled = false;
-          btnSimpan.innerHTML = '💾 Simpan Arsip';
-          showToast('Surat berhasil diarsipkan.', 'success');
-          tutup();
-          loadSuratSiapArsip();
-          loadDaftarArsip();
-          loadDaftarLokasiArsip();
-          loadSuratSelesai();
-          loadDashboard();
-        })
-        .withFailureHandler(function (err) {
-          btnSimpan.disabled = false;
-          btnSimpan.innerHTML = '💾 Simpan Arsip';
-          showToast('Gagal menyimpan arsip: ' + err.message, 'error');
-        })
-        .arsipkanSurat(CURRENT_USER.token, payload);
-    });
-  }
-
-  function batalkanArsipUi(arsipId) {
-    if (!window.confirm('Batalkan/hapus data arsip ini? Kalau berasal dari sistem persuratan, suratnya akan kembali muncul di daftar "Siap Diarsipkan".')) return;
-
-    google.script.run
-      .withSuccessHandler(function (res) {
-        showToast(res.message || 'Arsip berhasil dibatalkan.', 'success');
-        loadSuratSiapArsip();
-        loadDaftarArsip();
-        loadDaftarLokasiArsip();
-      })
-      .withFailureHandler(function (err) {
-        showToast('Gagal membatalkan arsip: ' + err.message, 'error');
-      })
-      .batalkanArsip(CURRENT_USER.token, arsipId);
-  }
-
-  /* ============================================================
-   *  CARI DOKUMEN (mengetahui lokasi penyimpanan fisik arsip)
-   * ============================================================ */
-
-  document.addEventListener('click', function (e) {
-    if (e.target && e.target.id === 'btnCariLokasi') jalankanCariLokasi();
-  });
-  document.addEventListener('keydown', function (e) {
-    if (e.target && e.target.id === 'cariLokasiKeyword' && e.key === 'Enter') jalankanCariLokasi();
-  });
-
-  function jalankanCariLokasi() {
-    const kw = document.getElementById('cariLokasiKeyword').value.trim().toLowerCase();
-    const box = document.getElementById('hasilCariLokasi');
-    if (!kw) { showToast('Ketik kata kunci pencarian terlebih dahulu.', 'error'); return; }
-
-    // Pastikan data arsip & lokasi terbaru sebelum mencari (kalau belum sempat termuat).
-    if (!DAFTAR_ARSIP_CACHE.length) {
-      box.innerHTML = '<div class="empty-state">Memuat data...</div>';
-      google.script.run
-        .withSuccessHandler(function (list) {
-          DAFTAR_ARSIP_CACHE = list || [];
-          renderHasilCariLokasi(kw, box);
-        })
-        .withFailureHandler(function (err) {
-          box.innerHTML = '<div class="empty-state">Gagal memuat data: ' + err.message + '</div>';
-        })
-        .getDaftarArsip(CURRENT_USER.token);
-    } else {
-      renderHasilCariLokasi(kw, box);
-    }
-  }
-
-  function renderHasilCariLokasi(kw, box) {
-    const hasil = DAFTAR_ARSIP_CACHE.filter(function (s) {
-      return (s.NoRegistrasi + ' ' + s.Perihal + ' ' + s.NomorArsip + ' ' + s.KategoriArsip + ' ' + s.NoSurat)
-        .toLowerCase().indexOf(kw) !== -1;
-    });
-
-    if (!hasil.length) {
-      box.innerHTML = '<div class="empty-state">Tidak ditemukan dokumen yang cocok dengan kata kunci tersebut.</div>';
-      return;
-    }
-
-    const lokasiMap = {};
-    LOKASI_ARSIP_CACHE.forEach(function (l) { lokasiMap[l.KodeLokasi] = l.NamaLokasi; });
-
-    box.innerHTML = '<div class="desc" style="margin-bottom:12px;">Ditemukan ' + hasil.length + ' dokumen.</div>' +
-      hasil.map(function (s) {
-        const punyaLokasi = !!s.KodeLokasi;
-        const namaLokasi = punyaLokasi ? (lokasiMap[s.KodeLokasi] || '') : '';
-        return '<div class="card" style="background:#f8fafc;box-shadow:none;margin-bottom:12px;">' +
-          '  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:flex-start;">' +
-          '    <div>' +
-          '      <div style="font-weight:700;color:var(--navy);">' + s.Perihal + '</div>' +
-          '      <div class="tahap-meta" style="margin-top:4px;">' + (s.NoRegistrasi ? 'No Registrasi: ' + s.NoRegistrasi + ' &middot; ' : '') + 'Nomor Arsip: ' + (s.NomorArsip || '-') + ' &middot; Kategori: ' + s.KategoriArsip + '</div>' +
-          '    </div>' +
-          '    <span class="pill ' + (s.Sumber === 'Manual' ? 'pill-info' : 'pill-selesai') + '">' + s.Sumber + '</span>' +
-          '  </div>' +
-          '  <div style="margin-top:12px;padding:12px 14px;background:#fff;border:1.5px solid var(--gold);border-radius:9px;">' +
-          (punyaLokasi
-            ? '    <div style="font-size:12px;color:var(--muted);">📍 Lokasi Penyimpanan</div><div style="font-size:16px;font-weight:800;color:var(--navy);margin-top:2px;">' + s.KodeLokasi + (namaLokasi ? ' — ' + namaLokasi : '') + '</div>'
-            : '    <div style="font-size:13px;color:var(--muted);">📍 Kode lokasi belum ditentukan untuk arsip ini.</div>') +
-          '  </div>' +
-          '</div>';
-      }).join('');
-  }
-
-  /* ============================================================
-   *  TAMBAH ARSIP MANUAL (surat lama, tidak ada di sistem persuratan)
-   * ============================================================ */
-
-  document.addEventListener('click', function (e) {
-    if (e.target && e.target.id === 'btnBukaArsipManual') bukaModalArsipManual();
-  });
-
-  function bukaModalArsipManual() {
-    const overlay = document.getElementById('arsipManualModalOverlay');
-    document.getElementById('manualNoSurat').value = '';
-    document.getElementById('manualTanggalSurat').value = '';
-    document.getElementById('manualPerihal').value = '';
-    document.getElementById('manualJenisSurat').value = '';
-    document.getElementById('manualSuratDariNama').value = '';
-    document.getElementById('manualNomorArsip').value = '';
-    document.getElementById('manualKodeLokasi').value = '';
-    document.getElementById('manualKategoriArsip').value = '';
-    document.getElementById('manualKeterangan').value = '';
-    isiPilihanLokasiArsip();
-    initKategoriArsipAutocomplete('manualKategoriArsip');
-    overlay.classList.add('show');
-  }
-
-  function initArsipManualModal() {
-    const overlay = document.getElementById('arsipManualModalOverlay');
-    const btnClose = document.getElementById('btnTutupArsipManual');
-    const btnBatal = document.getElementById('btnBatalArsipManual');
-    const btnSimpan = document.getElementById('btnSimpanArsipManual');
-    if (!overlay || overlay.dataset.bound === '1') return;
-    overlay.dataset.bound = '1';
-
-    function tutup() { overlay.classList.remove('show'); }
-    btnClose.addEventListener('click', tutup);
-    btnBatal.addEventListener('click', tutup);
-    overlay.addEventListener('click', function (e) { if (e.target === overlay) tutup(); });
-
-    btnSimpan.addEventListener('click', function () {
-      const perihal = document.getElementById('manualPerihal').value.trim();
-      const kategori = document.getElementById('manualKategoriArsip').value.trim();
-      if (!perihal) { showToast('Perihal wajib diisi.', 'error'); return; }
-      if (!kategori) { showToast('Kategori arsip wajib diisi.', 'error'); return; }
-
-      const payload = {
-        noSurat: document.getElementById('manualNoSurat').value.trim(),
-        tanggalSurat: document.getElementById('manualTanggalSurat').value,
-        perihal: perihal,
-        jenisSurat: document.getElementById('manualJenisSurat').value.trim(),
-        suratDariNama: document.getElementById('manualSuratDariNama').value.trim(),
-        nomorArsip: document.getElementById('manualNomorArsip').value.trim(),
-        kodeLokasi: document.getElementById('manualKodeLokasi').value,
-        kategoriArsip: kategori,
-        keterangan: document.getElementById('manualKeterangan').value.trim()
-      };
-
-      btnSimpan.disabled = true;
-      btnSimpan.innerHTML = '<span class="spinner"></span> Menyimpan...';
-
-      google.script.run
-        .withSuccessHandler(function () {
-          btnSimpan.disabled = false;
-          btnSimpan.innerHTML = '💾 Simpan Arsip Manual';
-          showToast('Arsip manual berhasil disimpan.', 'success');
-          tutup();
-          loadDaftarArsip();
-          loadDaftarLokasiArsip();
-        })
-        .withFailureHandler(function (err) {
-          btnSimpan.disabled = false;
-          btnSimpan.innerHTML = '💾 Simpan Arsip Manual';
-          showToast('Gagal menyimpan arsip manual: ' + err.message, 'error');
-        })
-        .tambahArsipManual(CURRENT_USER.token, payload);
-    });
-  }
-
-  /* ============================================================
-   *  LOKASI PENYIMPANAN ARSIP
-   * ============================================================ */
-
-  function loadDaftarLokasiArsip() {
-    const tbody = document.querySelector('#tabelLokasiArsip tbody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Memuat data...</td></tr>';
-
-    google.script.run
-      .withSuccessHandler(function (list) {
-        LOKASI_ARSIP_CACHE = list || [];
-        renderTabelLokasiArsip(LOKASI_ARSIP_CACHE);
-        isiPilihanLokasiArsip();
-      })
-      .withFailureHandler(function (err) {
-        if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Gagal memuat data: ' + err.message + '</td></tr>';
-      })
-      .getDaftarLokasiArsip(CURRENT_USER.token);
-  }
-
-  function renderTabelLokasiArsip(list) {
-    const tbody = document.querySelector('#tabelLokasiArsip tbody');
-    if (!tbody) return;
-    if (!list.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Belum ada lokasi penyimpanan. Klik "Tambah Lokasi" untuk membuat yang pertama.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = list.map(function (l) {
-      const sisa = l.KapasitasMaksimal - l.Terpakai;
-      const kodeEsc = l.KodeLokasi.replace(/'/g, "\\'");
-      const namaEsc = l.NamaLokasi.replace(/'/g, "\\'");
-      const ketEsc = (l.Keterangan || '').replace(/'/g, "\\'");
-      let warnaBar = 'var(--green)';
-      if (l.Persentase >= 100) warnaBar = 'var(--red)';
-      else if (l.Persentase >= 80) warnaBar = 'var(--amber)';
-      return '<tr>' +
-        '<td><strong>' + l.KodeLokasi + '</strong></td>' +
-        '<td>' + l.NamaLokasi + '</td>' +
-        '<td>' + l.KapasitasMaksimal + '</td>' +
-        '<td>' + l.Terpakai + '</td>' +
-        '<td>' + sisa + '</td>' +
-        '<td>' + (l.Keterangan || '-') + '</td>' +
-        '<td>' +
-        '  <div style="display:flex;gap:6px;">' +
-        '    <button class="btn btn-outline btn-sm" onclick="bukaEditLokasiArsip(\'' + kodeEsc + '\', \'' + namaEsc + '\', ' + l.KapasitasMaksimal + ', \'' + ketEsc + '\')">✏️ Edit</button>' +
-        '    <button class="btn btn-reject btn-sm" onclick="hapusLokasiArsipUi(\'' + kodeEsc + '\')">🗑️ Hapus</button>' +
-        '  </div>' +
-        '</td>' +
-        '</tr>';
-    }).join('');
-  }
-
-  document.addEventListener('click', function (e) {
-    if (e.target && e.target.id === 'btnBukaTambahLokasi') bukaModalLokasiArsip();
-  });
-
-  function bukaModalLokasiArsip() {
-    document.getElementById('lokasiArsipModalTitle').textContent = '📦 Tambah Lokasi Penyimpanan';
-    document.getElementById('lokasiKodeLokasi').value = '';
-    document.getElementById('lokasiKodeLokasi').disabled = false;
-    document.getElementById('lokasiNamaLokasi').value = '';
-    document.getElementById('lokasiKapasitasMaksimal').value = '';
-    document.getElementById('lokasiKeterangan').value = '';
-    document.getElementById('lokasiArsipModalOverlay').classList.add('show');
-  }
-
-  // Dipanggil dari tombol Edit pada tabel Lokasi Penyimpanan.
-  function bukaEditLokasiArsip(kode, nama, kapasitas, keterangan) {
-    document.getElementById('lokasiArsipModalTitle').textContent = '✏️ Edit Lokasi: ' + kode;
-    document.getElementById('lokasiKodeLokasi').value = kode;
-    document.getElementById('lokasiKodeLokasi').disabled = true; // Kode Lokasi tidak boleh diubah setelah dibuat (jadi rujukan arsip)
-    document.getElementById('lokasiNamaLokasi').value = nama;
-    document.getElementById('lokasiKapasitasMaksimal').value = kapasitas;
-    document.getElementById('lokasiKeterangan').value = keterangan;
-    document.getElementById('lokasiArsipModalOverlay').classList.add('show');
-  }
-
-  function initLokasiArsipModal() {
-    const overlay = document.getElementById('lokasiArsipModalOverlay');
-    const btnClose = document.getElementById('btnTutupLokasiArsip');
-    const btnBatal = document.getElementById('btnBatalLokasiArsip');
-    const btnSimpan = document.getElementById('btnSimpanLokasiArsip');
-    if (!overlay || overlay.dataset.bound === '1') return;
-    overlay.dataset.bound = '1';
-
-    function tutup() { overlay.classList.remove('show'); }
-    btnClose.addEventListener('click', tutup);
-    btnBatal.addEventListener('click', tutup);
-    overlay.addEventListener('click', function (e) { if (e.target === overlay) tutup(); });
-
-    btnSimpan.addEventListener('click', function () {
-      const payload = {
-        kodeLokasi: document.getElementById('lokasiKodeLokasi').value.trim(),
-        namaLokasi: document.getElementById('lokasiNamaLokasi').value.trim(),
-        kapasitasMaksimal: document.getElementById('lokasiKapasitasMaksimal').value,
-        keterangan: document.getElementById('lokasiKeterangan').value.trim()
-      };
-      if (!payload.kodeLokasi) { showToast('Kode Lokasi wajib diisi.', 'error'); return; }
-      if (!payload.namaLokasi) { showToast('Nama Lokasi wajib diisi.', 'error'); return; }
-      if (!payload.kapasitasMaksimal || Number(payload.kapasitasMaksimal) <= 0) { showToast('Kapasitas Maksimal harus lebih dari 0.', 'error'); return; }
-
-      btnSimpan.disabled = true;
-      btnSimpan.innerHTML = '<span class="spinner"></span> Menyimpan...';
-
-      google.script.run
-        .withSuccessHandler(function (res) {
-          btnSimpan.disabled = false;
-          btnSimpan.innerHTML = '💾 Simpan Lokasi';
-          showToast(res.message || 'Lokasi berhasil disimpan.', 'success');
-          tutup();
-          loadDaftarLokasiArsip();
-        })
-        .withFailureHandler(function (err) {
-          btnSimpan.disabled = false;
-          btnSimpan.innerHTML = '💾 Simpan Lokasi';
-          showToast('Gagal menyimpan lokasi: ' + err.message, 'error');
-        })
-        .simpanLokasiArsip(CURRENT_USER.token, payload);
-    });
-  }
-
-  function hapusLokasiArsipUi(kodeLokasi) {
-    if (!window.confirm('Hapus lokasi "' + kodeLokasi + '"? Hanya bisa dihapus kalau tidak ada arsip yang memakainya.')) return;
-
-    google.script.run
-      .withSuccessHandler(function (res) {
-        showToast(res.message || 'Lokasi berhasil dihapus.', 'success');
-        loadDaftarLokasiArsip();
-      })
-      .withFailureHandler(function (err) {
-        showToast('Gagal menghapus lokasi: ' + err.message, 'error');
-      })
-      .hapusLokasiArsip(CURRENT_USER.token, kodeLokasi);
-  }
-
-  /* ============================================================
-   *  DASHBOARD ARSIP
-   * ============================================================ */
-
-  // Dipanggil dari kartu statistik Dashboard Arsip - membuka menu Arsip yang relevan.
-  function bukaMenuArsip(page) {
-    const navItem = document.querySelector('.nav-item[data-page="' + page + '"]');
-    if (navItem) navItem.click();
-  }
-
-  function loadDashboardArsip() {
-    const grid = document.getElementById('statsGridArsip');
-
-    google.script.run
-      .withSuccessHandler(function (stats) {
-        if (grid) {
-          grid.innerHTML =
-            '<div class="stat-box stat-box-clickable" onclick="bukaMenuArsip(\'arsip\')"><div class="num">' + stats.totalArsip + '</div><div class="label">Total Arsip</div></div>' +
-            '<div class="stat-box amber stat-box-clickable" onclick="bukaMenuArsip(\'arsip\')"><div class="num">' + stats.siapDiarsipkan + '</div><div class="label">Siap Diarsipkan</div></div>' +
-            '<div class="stat-box stat-box-clickable" onclick="bukaMenuArsip(\'lokasiarsip\')"><div class="num">' + stats.jumlahLokasi + '</div><div class="label">Jumlah Lokasi</div></div>' +
-            '<div class="stat-box green stat-box-clickable" onclick="bukaMenuArsip(\'lokasiarsip\')"><div class="num">' + stats.persentaseTerpakai + '%</div><div class="label">Kapasitas Terpakai (' + stats.terpakaiTotal + '/' + stats.kapasitasTotal + ')</div></div>';
-        }
-
-        const boxKategori = document.getElementById('chartKategoriArsip');
-        if (boxKategori) renderDonutChart(boxKategori, stats.perKategori, 'kategori', 'jumlah');
-
-        const boxLokasi = document.getElementById('chartLokasiArsip');
-        if (boxLokasi) {
-          if (!stats.perLokasi.length) {
-            boxLokasi.innerHTML = '<div class="empty-state">Belum ada lokasi penyimpanan. Buat dulu di menu "Lokasi Penyimpanan".</div>';
-          } else {
-            renderHBarChart(
-              boxLokasi, stats.perLokasi,
-              function (l) { return l.kodeLokasi; },
-              function (l) { return l.persentase; },
-              function (l) { return l.terpakai + '/' + l.kapasitas + ' (' + l.persentase + '%)'; },
-              function (l) {
-                if (l.persentase >= 100) return 'var(--red)';
-                if (l.persentase >= 80) return 'var(--amber)';
-                return 'var(--green)';
-              }
-            );
-          }
-        }
-      })
-      .withFailureHandler(function (err) {
-        if (grid) grid.innerHTML = '<div class="warn-box">Gagal memuat statistik: ' + err.message + '</div>';
-      })
-      .getDashboardArsipStats(CURRENT_USER.token);
-  }
-
 
   /* ============================================================
    *  EDIT & HAPUS SURAT MASUK (Admin TU / Super Admin)
@@ -2035,6 +1864,25 @@
     });
   }
 
+  const IKON_WA_SVG = '<svg class="ikon-btn" viewBox="0 0 24 24" aria-hidden="true" style="width:15px;height:15px;flex-basis:15px;"><path fill="currentColor" d="M17.5 14.4c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.23 1.36.2 1.88.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.05 21.8h-.01a9.9 9.9 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.89 9.88zM20.52 3.45A11.8 11.8 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.17-3.48-8.42z"/></svg>';
+
+  // Tombol "Kirim WhatsApp" pada Daftar Surat Masuk: ambil info surat dari server, lalu tampilkan
+  // modal yang sama dengan setelah registrasi (pesan + foto QR Code + tombol kirim).
+  // mode: undefined = info status biasa | 'ambil' = pengingat pengambilan surat (Surat Selesai)
+  function kirimWaDariDaftar(noRegistrasi, btn, mode) {
+    if (btn) btn.disabled = true;
+    google.script.run
+      .withSuccessHandler(function (waInfo) {
+        if (btn) btn.disabled = false;
+        tampilkanKonfirmasiNotifWa(waInfo, noRegistrasi, mode === 'ambil' ? 'ambil' : true);
+      })
+      .withFailureHandler(function (err) {
+        if (btn) btn.disabled = false;
+        showToast('Gagal menyiapkan pesan WhatsApp: ' + err.message, 'error');
+      })
+      .getInfoKirimWa(CURRENT_USER.token, noRegistrasi, mode || '');
+  }
+
   function bukaEditSurat(noRegistrasi) {
     const overlay = document.getElementById('editSuratModalOverlay');
     const errBox = document.getElementById('editSuratErrorBox');
@@ -2093,13 +1941,6 @@
       .deleteSuratMasuk(CURRENT_USER.token, noRegistrasi);
   }
 
-  document.addEventListener('change', function (e) {
-    if (e.target && e.target.id === 'filterBulanSemuaSurat') {
-      FILTER_BULAN_SEMUA_SURAT = e.target.value || '';
-      terapkanFilterSemuaSurat();
-    }
-  });
-
   document.addEventListener('input', function (e) {
     if (e.target && e.target.id === 'cariSemuaSurat') {
       terapkanFilterSemuaSurat();
@@ -2117,6 +1958,26 @@
   /* ============================================================
    *  LAPORAN HARIAN
    * ============================================================ */
+
+  // Laporan: hanya satu kartu (Harian ATAU Bulanan) yang tampil; data dimuat untuk yang dipilih saja.
+  let SUB_LAPORAN_AKTIF = 'harian';
+  function tampilkanSubLaporan(sub) {
+    SUB_LAPORAN_AKTIF = (sub === 'bulanan') ? 'bulanan' : 'harian';
+    const harian = document.getElementById('cardLaporanHarian');
+    const bulanan = document.getElementById('cardLaporanBulanan');
+    if (harian) harian.classList.toggle('laporan-sembunyi', SUB_LAPORAN_AKTIF !== 'harian');
+    if (bulanan) bulanan.classList.toggle('laporan-sembunyi', SUB_LAPORAN_AKTIF !== 'bulanan');
+    const subBox = document.getElementById('navSubLaporan');
+    if (subBox) {
+      subBox.classList.add('buka');
+      subBox.querySelectorAll('.nav-subitem').forEach(function (el) {
+        el.classList.toggle('active', el.dataset.sublaporan === SUB_LAPORAN_AKTIF);
+      });
+      const induk = subBox.previousElementSibling;
+      if (induk) induk.classList.add('terbuka');
+    }
+    if (SUB_LAPORAN_AKTIF === 'harian') loadLaporanHarian(); else loadLaporanBulanan();
+  }
 
   function loadLaporanHarian() {
     const statsBox = document.getElementById('statsHarian');

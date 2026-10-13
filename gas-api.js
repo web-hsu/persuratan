@@ -25,8 +25,7 @@
    */
   var FUNGSI_CACHE = {
     getAllSurat: 1, getDashboardStats: 1, getSuratMenungguPersetujuan: 1, getSuratSelesai: 1,
-    getSuratSiapArsip: 1, getDaftarArsip: 1, getDashboardArsipStats: 1, getLaporanHarian: 1,
-    getMasterSKPD: 1, getJenisSuratList: 1, getMasterKategoriArsip: 1, getDaftarLokasiArsip: 1,
+    getLaporanHarian: 1, getMasterSKPD: 1, getJenisSuratList: 1,
     getTrackingByNoRegistrasi: 1, getTrackingPublik: 1
   };
   var AWALAN_CACHE = 'sparta_swr:';
@@ -146,12 +145,14 @@
       });
   }
 
-  function buat(onOk, onFail) {
+  function buat(onOk, onFail, senyapSemua) {
     return new Proxy({}, {
       get: function (_, nama) {
-        if (nama === 'withSuccessHandler') return function (fn) { return buat(fn, onFail); };
-        if (nama === 'withFailureHandler') return function (fn) { return buat(onOk, fn); };
-        if (nama === 'withUserObject')     return function ()   { return buat(onOk, onFail); };
+        if (nama === 'withSuccessHandler') return function (fn) { return buat(fn, onFail, senyapSemua); };
+        if (nama === 'withFailureHandler') return function (fn) { return buat(onOk, fn, senyapSemua); };
+        if (nama === 'withUserObject')     return function ()   { return buat(onOk, onFail, senyapSemua); };
+        // Untuk pemuatan awal di latar belakang: bila gagal, jangan tampilkan kotak galat merah.
+        if (nama === 'withSilentErrors')   return function ()   { return buat(onOk, onFail, true); };
         if (typeof nama !== 'string' || nama === 'then') return undefined;
 
         return function () {
@@ -163,7 +164,7 @@
 
           var gagal = function (pesan, senyap) {
             console.error('[API] ' + nama + ':', pesan);
-            if (!senyap) tampilkanGalat(nama, pesan);
+            if (!senyap && !senyapSemua) tampilkanGalat(nama, pesan);
             var err = new Error(pesan);
             if (typeof onFail === 'function') onFail(err);
           };
