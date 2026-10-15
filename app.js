@@ -1,4 +1,4 @@
-console.info('[SPARTA] app.js versi 20261017 termuat');
+console.info('[SPARTA] app.js versi 20261018 termuat');
 /* ============================================================
    *  CLIENT-SIDE LOGIC
    * ============================================================ */
@@ -730,6 +730,81 @@ console.info('[SPARTA] app.js versi 20261017 termuat');
    *  UPDATE DISPOSISI (PIMPINAN)
    * ============================================================ */
 
+  let KOTAK_MASUK_DATA = [];
+  let KOTAK_MASUK_URUT = 'lama'; // 'lama' = terlama dahulu | 'baru' = terbaru dahulu
+
+  // Waktu masuk (ms) sebuah surat; bila data lama (cache) belum membawa TanggalMasukRaw, baca dari teks d/M/yyyy.
+  function waktuMasukSurat(s) {
+    if (typeof s.TanggalMasukRaw === 'number' && s.TanggalMasukRaw > 0) return s.TanggalMasukRaw;
+    const m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s.TanggalMasuk || '');
+    return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
+  }
+
+  // Jumlah hari sejak masuk: pakai hitungan server bila ada, selain itu hitung di browser.
+  function hariMenungguSurat(s) {
+    if (typeof s.HariMenunggu === 'number') return s.HariMenunggu;
+    const t = waktuMasukSurat(s);
+    if (!t) return null;
+    const sk = new Date();
+    const hariIni = Date.UTC(sk.getFullYear(), sk.getMonth(), sk.getDate());
+    const d = new Date(t);
+    const hariMasuk = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    return Math.max(0, Math.round((hariIni - hariMasuk) / 86400000));
+  }
+
+  function labelHariMenunggu(n) {
+    if (n === null) return '';
+    if (n === 0) return 'Hari ini';
+    return n + ' hari';
+  }
+
+  // Warna penanda: makin lama menunggu makin mencolok (0-2 hari normal, 3-6 hari kuning, 7+ hari merah).
+  function kelasHariMenunggu(n) {
+    if (n === null) return '';
+    if (n >= 7) return ' hari-lama';
+    if (n >= 3) return ' hari-sedang';
+    return '';
+  }
+
+  function renderKotakMasukSaya() {
+    const box = document.getElementById('kotakMasukSaya');
+    const counter = document.getElementById('jumlahKotakMasuk');
+    if (!box) return;
+    if (!KOTAK_MASUK_DATA.length) {
+      box.innerHTML = '<div class="empty-state">Tidak ada surat yang menunggu persetujuan Anda saat ini. 🎉</div>';
+      if (counter) counter.textContent = '';
+      return;
+    }
+    if (counter) counter.textContent = '(' + KOTAK_MASUK_DATA.length + ')';
+
+    const arah = KOTAK_MASUK_URUT === 'baru' ? -1 : 1;
+    const list = KOTAK_MASUK_DATA.slice().sort(function (a, b) { return arah * (waktuMasukSurat(a) - waktuMasukSurat(b)); });
+
+    box.innerHTML = list.map(function (s) {
+      const hari = hariMenungguSurat(s);
+      return '<div class="kotak-masuk-row" data-noreg="' + s.NoRegistrasi + '" onclick="bukaDariKotakMasuk(\'' + s.NoRegistrasi + '\', this)">' +
+        '  <div class="kotak-masuk-main">' +
+        '    <span class="kotak-masuk-noreg">' + s.NoRegistrasi + '</span>' +
+        '    <span class="kotak-masuk-perihal">' + s.Perihal + '</span>' +
+        '  </div>' +
+        '  <div class="kotak-masuk-side">' +
+        '    <span class="pill pill-proses">' + s.TahapMenunggu + '</span>' +
+        '    <span class="kotak-masuk-tanggal">' + s.TanggalMasuk + '</span>' +
+        (hari !== null ? '    <span class="kotak-masuk-hari' + kelasHariMenunggu(hari) + '" title="Sudah ' + hari + ' hari sejak surat masuk">' + labelHariMenunggu(hari) + '</span>' : '') +
+        '  </div>' +
+        '</div>';
+    }).join('');
+    // Muat lebih awal alur 3 surat teratas (yang paling mungkin dibuka) agar pop up langsung terisi.
+    list.slice(0, 3).forEach(function (s, i) { setTimeout(function () { prefetchDisposisi(s.NoRegistrasi); }, 400 + i * 500); });
+  }
+
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.id === 'urutKotakMasuk') {
+      KOTAK_MASUK_URUT = e.target.value === 'baru' ? 'baru' : 'lama';
+      renderKotakMasukSaya();
+    }
+  });
+
   function loadKotakMasukSaya() {
     const box = document.getElementById('kotakMasukSaya');
     const counter = document.getElementById('jumlahKotakMasuk');
@@ -738,25 +813,8 @@ console.info('[SPARTA] app.js versi 20261017 termuat');
 
     google.script.run
       .withSuccessHandler(function (list) {
-        if (!list.length) {
-          box.innerHTML = '<div class="empty-state">Tidak ada surat yang menunggu persetujuan Anda saat ini. 🎉</div>';
-          return;
-        }
-        if (counter) counter.textContent = '(' + list.length + ')';
-        box.innerHTML = list.map(function (s) {
-          return '<div class="kotak-masuk-row" data-noreg="' + s.NoRegistrasi + '" onclick="bukaDariKotakMasuk(\'' + s.NoRegistrasi + '\', this)">' +
-            '  <div class="kotak-masuk-main">' +
-            '    <span class="kotak-masuk-noreg">' + s.NoRegistrasi + '</span>' +
-            '    <span class="kotak-masuk-perihal">' + s.Perihal + '</span>' +
-            '  </div>' +
-            '  <div class="kotak-masuk-side">' +
-            '    <span class="pill pill-proses">' + s.TahapMenunggu + '</span>' +
-            '    <span class="kotak-masuk-tanggal">' + s.TanggalMasuk + '</span>' +
-            '  </div>' +
-            '</div>';
-        }).join('');
-        // Muat lebih awal alur 3 surat teratas (yang paling mungkin dibuka) agar pop up langsung terisi.
-        list.slice(0, 3).forEach(function (s, i) { setTimeout(function () { prefetchDisposisi(s.NoRegistrasi); }, 400 + i * 500); });
+        KOTAK_MASUK_DATA = list || [];
+        renderKotakMasukSaya();
       })
       .withFailureHandler(function (err) {
         box.innerHTML = '<div class="empty-state">Terjadi kesalahan: ' + err.message + '</div>';

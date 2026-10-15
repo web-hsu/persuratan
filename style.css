@@ -1116,3 +1116,14 @@
   #disposisiPopupOverlay .disposisi-modal-header{ padding:10px 14px; }
   #disposisiPopupOverlay .disposisi-body{ padding:10px 10px 12px; max-height:calc(88vh - 54px); }
 }
+
+
+/* ============ MENUNGGU PERSETUJUAN: penanda jumlah hari ============ */
+.kotak-masuk-hari{
+  display:inline-block; min-width:64px; text-align:center;
+  padding:3px 10px; border-radius:20px;
+  font-size:11.5px; font-weight:700; white-space:nowrap;
+  background:#e4edf7; color:var(--navy-light);
+}
+.kotak-masuk-hari.hari-sedang{ background:#fdf1da; color:var(--amber); }
+.kotak-masuk-hari.hari-lama{ background:#fbe6e4; color:var(--red); }
