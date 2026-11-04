@@ -1162,3 +1162,257 @@
 .kotak-urut label{ margin:0; font-size:13px; font-weight:600; color:var(--navy); white-space:nowrap; }
 .kotak-urut select{ width:auto; min-width:150px; padding:7px 12px; font-size:13px; }
 @media (max-width:640px){ .kotak-urut{ margin-left:0; width:100%; } .kotak-urut select{ flex:1; } }
+
+
+/* ============================================================================
+ *  TEMA GLASS (Liquid Glass) - paling bawah agar menimpa aturan sebelumnya.
+ *  Hanya mengubah tampilan: panel kaca buram (frosted), tepi bercahaya, latar warna-warni.
+ *  Untuk kembali ke tampilan lama: hapus seluruh blok ini sampai akhir file.
+ * ============================================================================ */
+:root{
+  --glass-blur:blur(26px) saturate(170%);
+  --glass-light:linear-gradient(135deg, rgba(255,255,255,.76), rgba(255,255,255,.54));
+  --glass-dark:linear-gradient(160deg, rgba(16,42,90,.58), rgba(8,22,56,.50));
+  --glass-rim:1px solid rgba(255,255,255,.66);
+  --glass-shadow:0 12px 36px rgba(8,18,52,.28),
+                 inset 0 1.5px 0 rgba(255,255,255,.85),
+                 inset 0 -1px 0 rgba(255,255,255,.28),
+                 inset 1px 0 0 rgba(255,255,255,.42),
+                 inset -1px 0 0 rgba(255,255,255,.24);
+  --glass-shadow-soft:0 6px 20px rgba(8,18,52,.20),
+                      inset 0 1px 0 rgba(255,255,255,.8),
+                      inset 0 -1px 0 rgba(255,255,255,.22);
+}
+
+/* ---------- Latar warna-warni di belakang kaca ---------- */
+html{ background:#142d63; }
+body{ background:transparent; min-height:100vh; }
+body::before{
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(48% 42% at 8% 6%,   rgba(32,178,190,.95), transparent 70%),
+    radial-gradient(46% 46% at 94% 10%, rgba(66,99,235,.90),  transparent 70%),
+    radial-gradient(52% 50% at 80% 94%, rgba(222,70,128,.85), transparent 70%),
+    radial-gradient(48% 48% at 6% 90%,  rgba(232,106,64,.80), transparent 70%),
+    radial-gradient(30% 30% at 50% 48%, rgba(184,134,46,.30), transparent 70%),
+    linear-gradient(135deg,#142d63 0%,#26306f 50%,#3b2a66 100%);
+}
+.landing-wrap{ background:transparent; }
+
+/* ---------- Panel kaca (kartu, kotak statistik, kotak pencarian) ---------- */
+.card, .stat-box, .tracking-search-box{
+  background:var(--glass-light);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border:var(--glass-rim);
+  box-shadow:var(--glass-shadow);
+}
+.card{ border-radius:26px; }
+.tracking-search-box{ border-radius:28px; }
+.stat-box{
+  border-radius:22px;
+  border-left-width:4px;            /* warna garis kiri tetap mengikuti kelas green/red/amber */
+  box-shadow:var(--glass-shadow-soft);
+}
+.stat-box-clickable:hover{ box-shadow:var(--glass-shadow); }
+.card h2{ color:var(--navy-dark); }
+.landing-hero h1{ text-shadow:0 2px 18px rgba(5,15,50,.45); }
+.landing-hero > p{ color:#eaf2fb; }
+.landing-topbar .brand-sub{ color:#dbe8f6; }
+footer.app-footer{ color:rgba(255,255,255,.78); }
+
+/* ---------- Sidebar: panel kaca gelap melayang ---------- */
+.sidebar{
+  background:var(--glass-dark);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:0 16px 40px rgba(4,10,30,.38),
+             inset 0 1.5px 0 rgba(255,255,255,.45),
+             inset 0 -1px 0 rgba(255,255,255,.08);
+}
+@media (min-width:901px){
+  .sidebar{ top:14px; height:calc(100vh - 28px); margin:14px 0 14px 14px; border-radius:28px; }
+}
+@media (max-width:900px){
+  .sidebar{ background:linear-gradient(160deg, rgba(16,42,90,.86), rgba(8,22,56,.82)); border-radius:0 26px 26px 0; }
+}
+.sidebar-brand{ border-bottom:1px solid rgba(255,255,255,.18); }
+.sidebar-footer{ border-top:1px solid rgba(255,255,255,.18); }
+.sidebar-brand .brand-sub{ color:#d3e2f3; }
+.nav-item{
+  color:rgba(255,255,255,.84);
+  border:1px solid transparent; border-radius:15px;
+}
+.nav-item:hover{ background:rgba(255,255,255,.14); color:#fff; }
+.nav-item.active{
+  color:#fff;
+  background:linear-gradient(135deg, rgba(255,255,255,.32), rgba(255,255,255,.13));
+  border:1px solid rgba(255,255,255,.42);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55), 0 4px 14px rgba(4,10,40,.22);
+}
+.nav-subitem{ border-radius:12px; }
+.nav-subitem.active{ background:rgba(255,255,255,.2); color:#fff; }
+.sidebar-footer .user-chip{
+  background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.30);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35); border-radius:18px;
+}
+.btn-keluar{
+  background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4); border-radius:16px; color:#fff;
+}
+.btn-keluar:hover{ background:rgba(255,255,255,.28); }
+.topbar-mobile{
+  background:var(--glass-dark);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border-bottom:1px solid rgba(255,255,255,.28);
+}
+.sidebar::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.3); }
+
+/* ---------- Kolom isian ---------- */
+input[type=text], input[type=password], input[type=date], input[type=time], input[type=number], select, textarea{
+  background:rgba(255,255,255,.62);
+  border:1px solid rgba(255,255,255,.80);
+  border-radius:14px;
+  box-shadow:inset 0 1px 3px rgba(8,18,52,.10), inset 0 1px 0 rgba(255,255,255,.7);
+}
+input:focus, select:focus, textarea:focus{
+  background:rgba(255,255,255,.86);
+  border-color:rgba(255,255,255,.95);
+  box-shadow:0 0 0 3px rgba(66,99,235,.28), inset 0 1px 3px rgba(8,18,52,.08);
+}
+input:disabled{ background:rgba(255,255,255,.34); }
+
+/* ---------- Tombol ---------- */
+.btn{ border-radius:14px; box-shadow:inset 0 1px 0 rgba(255,255,255,.38), 0 4px 12px rgba(8,18,52,.18); }
+.btn-primary{ background:linear-gradient(180deg, rgba(34,82,138,.96), rgba(10,37,64,.96)); }
+.btn-primary:hover{ background:linear-gradient(180deg, rgba(40,92,152,.98), rgba(10,37,64,.98)); }
+.btn-gold{ background:linear-gradient(180deg,#ecc56f,#c8922f); }
+.btn-outline{
+  background:rgba(255,255,255,.55); border:1px solid rgba(255,255,255,.85); color:var(--navy);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+}
+.btn-outline:hover{ background:rgba(255,255,255,.80); }
+.btn-approve{ background:linear-gradient(180deg,#26905f,#1c6b46); }
+.btn-reject{ background:linear-gradient(180deg,#bf4137,#a02e26); }
+.btn-fix{ background:linear-gradient(180deg,#b9801f,#9c6b12); }
+.btn-wa{ background:linear-gradient(180deg,#2cc46c,#1fae5b); }
+.btn-link{ color:#eaf2fb; }
+
+/* ---------- Pil status, chip, tombol pilihan ---------- */
+.pill{ box-shadow:inset 0 1px 0 rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.55); }
+.pill-proses{ background:rgba(253,241,218,.82); }
+.pill-selesai{ background:rgba(225,245,233,.82); }
+.pill-ditolak{ background:rgba(251,230,228,.82); }
+.pill-perbaikan{ background:rgba(253,240,217,.82); }
+.pill-info{ background:rgba(228,237,247,.82); }
+.filter-chip{
+  background:rgba(255,255,255,.55); border:1px solid rgba(255,255,255,.8);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+}
+.toggle-btn{
+  background:rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.8); border-radius:16px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
+}
+.toggle-btn:hover{ background:rgba(255,255,255,.78); }
+.toggle-btn.active{
+  background:linear-gradient(180deg, rgba(34,82,138,.96), rgba(10,37,64,.96));
+  border-color:rgba(255,255,255,.45); color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 6px 16px rgba(8,18,52,.28);
+}
+.toggle-btn.active[data-tipe="INFORMASI"]{ background:linear-gradient(180deg,#2d6aa8,#1c4570); }
+.chip-pimpinan{
+  background:rgba(255,255,255,.55); border:1px solid rgba(255,255,255,.8); color:var(--navy);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+}
+.chip-pimpinan:hover{ background:rgba(255,255,255,.8); border-color:#fff; }
+.chip-pimpinan.aktif{
+  background:linear-gradient(180deg, rgba(34,82,138,.96), rgba(10,37,64,.96));
+  border-color:rgba(255,255,255,.5); color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 6px 16px rgba(8,18,52,.28);
+}
+.chip-pimpinan .chip-jumlah{ background:rgba(255,255,255,.7); }
+
+/* ---------- Tabel & daftar ---------- */
+th{
+  background:rgba(255,255,255,.58); color:var(--navy-dark);
+  -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  box-shadow:0 1px 0 rgba(255,255,255,.7);
+}
+th, td{ border-bottom:1px solid rgba(10,37,64,.08); }
+tbody tr:nth-child(even) td{ background:rgba(255,255,255,.22); }
+tbody tr:hover td, tr:hover td{ background:rgba(255,255,255,.58); }
+#tabelSemuaSurat tbody tr[data-noreg]:hover td{ background:rgba(255,255,255,.64); }
+.table-wrap{ border-radius:18px; scrollbar-color:var(--gold) rgba(255,255,255,.35); }
+.table-wrap::-webkit-scrollbar-track{ background:rgba(255,255,255,.35); }
+.kotak-masuk-row{ border-bottom:1px solid rgba(10,37,64,.08); border-radius:16px; }
+.kotak-masuk-row:hover{ background:rgba(255,255,255,.62); }
+.kotak-masuk-row:last-child{ border-bottom:none; }
+
+/* ---------- Kotak info, saran isian, grafik, alur ---------- */
+.info-box{ background:rgba(228,237,247,.6); border:1px solid rgba(255,255,255,.75); border-radius:16px; }
+.warn-box{ background:rgba(253,243,225,.65); border:1px solid rgba(255,255,255,.75); border-radius:16px; }
+.success-box{ background:rgba(225,245,233,.65); border:1px solid rgba(255,255,255,.75); border-radius:16px; }
+.skpd-suggest-box{
+  background:rgba(255,255,255,.90); border:var(--glass-rim); border-radius:16px;
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+}
+.skpd-suggest-item{ border-bottom:1px solid rgba(10,37,64,.08); }
+.skpd-suggest-item:hover{ background:rgba(228,237,247,.8); }
+.donut-hole{ background:rgba(255,255,255,.90); box-shadow:inset 0 1px 3px rgba(8,18,52,.12); }
+.timeline .tahap-catatan{ background:rgba(255,255,255,.55); border-radius:12px; }
+
+/* ---------- Kotak hasil tracking (kepala biru) jadi kaca gelap ---------- */
+.no-reg-result{
+  background:linear-gradient(135deg, rgba(16,42,90,.80), rgba(10,28,66,.72));
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border:1px solid rgba(255,255,255,.30);
+  border-left:4px solid var(--gold-light);
+  border-radius:22px;
+  box-shadow:0 12px 32px rgba(4,10,40,.35), inset 0 1.5px 0 rgba(255,255,255,.4);
+}
+
+/* ---------- Pop up / modal kaca ---------- */
+.login-modal-overlay, #disposisiPopupOverlay{
+  background:rgba(10,24,60,.36);
+  -webkit-backdrop-filter:blur(14px) saturate(140%); backdrop-filter:blur(14px) saturate(140%);
+}
+.login-modal{
+  background:linear-gradient(135deg, rgba(255,255,255,.88), rgba(255,255,255,.72));
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border:1px solid rgba(255,255,255,.85);
+  border-radius:28px;
+  box-shadow:0 30px 80px rgba(4,10,40,.45),
+             inset 0 1.5px 0 rgba(255,255,255,.9),
+             inset 0 -1px 0 rgba(255,255,255,.3);
+}
+#trackingPopupOverlay .login-modal{ border-radius:24px; }
+#disposisiPopupOverlay .disposisi-modal{ border-radius:24px; }
+.disposisi-modal-header, #disposisiPopupOverlay .disposisi-modal-header{
+  background:linear-gradient(135deg, rgba(16,42,90,.80), rgba(8,22,56,.74));
+  border-bottom:1px solid rgba(255,255,255,.32);
+}
+.disposisi-body{ background:rgba(255,255,255,.30); }
+.modal-close{ color:var(--navy-light); }
+
+/* ---------- Pemberitahuan (toast) ---------- */
+.toast{
+  background:rgba(10,30,70,.82);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border:1px solid rgba(255,255,255,.30); border-radius:18px;
+  box-shadow:0 12px 32px rgba(4,10,40,.40), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.toast.error{ background:rgba(160,46,38,.88); }
+.toast.success{ background:rgba(28,107,70,.88); }
+
+/* ---------- Cadangan bila browser tidak mendukung blur / pengguna mematikan transparansi ---------- */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .card, .stat-box, .tracking-search-box, .login-modal, .skpd-suggest-box{ background:rgba(255,255,255,.94); }
+  .sidebar, .topbar-mobile{ background:linear-gradient(180deg,var(--navy),var(--navy-dark)); }
+  .no-reg-result{ background:linear-gradient(120deg,var(--navy),var(--navy-light)); }
+}
+@media (prefers-reduced-transparency: reduce){
+  .card, .stat-box, .tracking-search-box, .login-modal, .skpd-suggest-box{
+    background:rgba(255,255,255,.96); -webkit-backdrop-filter:none; backdrop-filter:none;
+  }
+  .sidebar, .topbar-mobile{ background:linear-gradient(180deg,var(--navy),var(--navy-dark)); -webkit-backdrop-filter:none; backdrop-filter:none; }
+}
