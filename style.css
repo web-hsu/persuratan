@@ -1136,3 +1136,20 @@
 .rb-detail summary{ cursor:pointer; color:var(--navy-light); font-weight:600; }
 .rb-trk{ padding:4px 0; border-bottom:1px dashed var(--border); }
 .rb-trk:last-child{ border-bottom:none; }
+
+
+/* ============ FILTER PIMPINAN (Menunggu Persetujuan - Admin TU) ============ */
+.chip-pimpinan-bar{ display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 14px; }
+.chip-pimpinan{
+  display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+  padding:7px 14px; border-radius:999px; font:inherit; font-size:13px; font-weight:600;
+  background:#fff; color:var(--navy); border:1.5px solid var(--border);
+  transition:background .15s, border-color .15s, color .15s;
+}
+.chip-pimpinan:hover{ border-color:var(--gold); background:#fbf6ea; }
+.chip-pimpinan.aktif{ background:var(--navy); color:#fff; border-color:var(--navy); }
+.chip-pimpinan .chip-jumlah{
+  min-width:22px; padding:1px 7px; border-radius:999px; text-align:center;
+  font-size:11.5px; font-weight:700; background:#e9eef5; color:var(--navy-light);
+}
+.chip-pimpinan.aktif .chip-jumlah{ background:var(--gold); color:#fff; }

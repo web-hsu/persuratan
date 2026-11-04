@@ -1,4 +1,4 @@
-console.info('[SPARTA] app.js versi 20261105 termuat');
+console.info('[SPARTA] app.js versi 20261107 termuat');
 /* ============================================================
    *  CLIENT-SIDE LOGIC
    * ============================================================ */
@@ -10,7 +10,6 @@ console.info('[SPARTA] app.js versi 20261105 termuat');
   const MENU_STANDAR = [
     {p:'dashboard', label:'📊 Dashboard'},
     {p:'registrasi', label:'📝 Registrasi Surat'},
-    {p:'tracking', label:'🔎 Tracking Surat'},
     {p:'disposisi', label:'✅ Menunggu Persetujuan'},
     {p:'semuasurat', label:'📋 Daftar Surat Masuk'},
     {p:'suratselesai', label:'✔️ Surat Selesai'},
@@ -769,19 +768,65 @@ console.info('[SPARTA] app.js versi 20261105 termuat');
     return '';
   }
 
+  // ---- Filter per pimpinan (khusus Admin TU, yang melihat surat semua tahap) ----
+  const FILTER_PIMPINAN = ['Asisten', 'Staf Ahli', 'Sekda', 'Wakil Bupati', 'Bupati'];
+  let KOTAK_MASUK_FILTER = ''; // '' = Semua Pimpinan
+
+  // Tahap alur -> pimpinan yang berwenang (termasuk nama tahap versi lama)
+  function pimpinanDariTahap(tahap) {
+    const t = String(tahap || '');
+    if (t.indexOf('Asisten') !== -1) return 'Asisten';
+    if (t.indexOf('Staf Ahli') !== -1) return 'Staf Ahli';
+    if (t.indexOf('Wakil Bupati') !== -1) return 'Wakil Bupati';
+    if (t.indexOf('Sekda') !== -1) return 'Sekda';
+    if (t.indexOf('Bupati') !== -1) return 'Bupati';
+    return '';
+  }
+
+  function renderFilterPimpinan() {
+    const el = document.getElementById('filterPimpinanKotak');
+    if (!el) return;
+    if (!CURRENT_USER || CURRENT_USER.role !== 'Admin TU' || !KOTAK_MASUK_DATA.length) {
+      el.style.display = 'none';
+      return;
+    }
+    const jumlah = {};
+    FILTER_PIMPINAN.forEach(function (p) { jumlah[p] = 0; });
+    KOTAK_MASUK_DATA.forEach(function (s) {
+      const p = pimpinanDariTahap(s.TahapMenunggu);
+      if (p) jumlah[p]++;
+    });
+    const tombol = function (nilai, label, n) {
+      return '<button type="button" class="chip-pimpinan' + (KOTAK_MASUK_FILTER === nilai ? ' aktif' : '') + '" data-filter-pimpinan="' + nilai + '">' +
+        label + ' <span class="chip-jumlah">' + n + '</span></button>';
+    };
+    el.innerHTML = tombol('', 'Semua Pimpinan', KOTAK_MASUK_DATA.length) +
+      FILTER_PIMPINAN.map(function (p) { return tombol(p, p, jumlah[p]); }).join('');
+    el.style.display = 'flex';
+  }
+
   function renderKotakMasukSaya() {
     const box = document.getElementById('kotakMasukSaya');
     const counter = document.getElementById('jumlahKotakMasuk');
     if (!box) return;
+    renderFilterPimpinan();
     if (!KOTAK_MASUK_DATA.length) {
       box.innerHTML = '<div class="empty-state">Tidak ada surat yang menunggu persetujuan Anda saat ini. 🎉</div>';
       if (counter) counter.textContent = '';
       return;
     }
-    if (counter) counter.textContent = '(' + KOTAK_MASUK_DATA.length + ')';
+    const adaFilter = CURRENT_USER && CURRENT_USER.role === 'Admin TU' && KOTAK_MASUK_FILTER;
+    const sumber = adaFilter
+      ? KOTAK_MASUK_DATA.filter(function (s) { return pimpinanDariTahap(s.TahapMenunggu) === KOTAK_MASUK_FILTER; })
+      : KOTAK_MASUK_DATA;
+    if (counter) counter.textContent = '(' + sumber.length + (adaFilter ? ' dari ' + KOTAK_MASUK_DATA.length : '') + ')';
+    if (!sumber.length) {
+      box.innerHTML = '<div class="empty-state">Tidak ada surat yang menunggu ' + KOTAK_MASUK_FILTER + '.</div>';
+      return;
+    }
 
     const arah = KOTAK_MASUK_URUT === 'baru' ? -1 : 1;
-    const list = KOTAK_MASUK_DATA.slice().sort(function (a, b) { return arah * (waktuMasukSurat(a) - waktuMasukSurat(b)); });
+    const list = sumber.slice().sort(function (a, b) { return arah * (waktuMasukSurat(a) - waktuMasukSurat(b)); });
 
     box.innerHTML = list.map(function (s) {
       const hari = hariMenungguSurat(s);
@@ -806,6 +851,13 @@ console.info('[SPARTA] app.js versi 20261105 termuat');
       KOTAK_MASUK_URUT = e.target.value === 'baru' ? 'baru' : 'lama';
       renderKotakMasukSaya();
     }
+  });
+
+  document.addEventListener('click', function (e) {
+    const btn = e.target && e.target.closest ? e.target.closest('[data-filter-pimpinan]') : null;
+    if (!btn) return;
+    KOTAK_MASUK_FILTER = btn.getAttribute('data-filter-pimpinan') || '';
+    renderKotakMasukSaya();
   });
 
   function loadKotakMasukSaya() {
