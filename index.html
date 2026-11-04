@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://script.google.com">
   <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+Pro:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261018">
+  <link rel="stylesheet" href="style.css?v=20261105">
 </head>
 <body>
 
@@ -557,6 +557,48 @@
         </div>
       </div>
 
+      <!-- ============== RECYCLE BIN (Admin TU) ============== -->
+      <div class="page" id="page-recyclebin">
+        <div class="card">
+          <h2>🗑️ Recycle Bin</h2>
+          <div class="desc">Surat yang dihapus dari Daftar Surat Masuk disimpan di sini lengkap dengan <strong>akun yang menghapus</strong> dan waktunya. Tracking surat yang dihapus tidak bisa dibuka lagi sampai surat <strong>dipulihkan</strong>. Nomor registrasi surat yang dihapus tidak dipakai ulang.</div>
+
+          <div class="filter-row">
+            <div class="field" style="flex:1;min-width:220px;">
+              <label>Cari Cepat</label>
+              <input type="text" id="cariRecycle" placeholder="Ketik No Registrasi, perihal, pengirim, atau nama penghapus...">
+            </div>
+            <div class="field">
+              <label>Status</label>
+              <select id="filterStatusRecycle">
+                <option value="">Semua</option>
+                <option value="Terhapus">Terhapus</option>
+                <option value="Dipulihkan">Dipulihkan</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-outline" id="btnRefreshRecycle">🔄 Muat Ulang</button>
+            </div>
+            <div class="field" style="margin-left:auto;align-self:end;">
+              <span class="tahap-meta" id="jumlahRecycle"></span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="tabelRecycle">
+              <thead>
+                <tr>
+                  <th>No Registrasi</th><th>Surat</th><th>Jenis</th><th>Status Terakhir</th>
+                  <th>Dihapus Oleh</th><th>Waktu Hapus</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="7" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- ============== LAPORAN HARIAN & BULANAN ============== -->
       <div class="page" id="page-laporan">
         <!-- Menu Laporan berupa dropdown (Harian / Bulanan): hanya satu kartu yang tampil sekaligus. -->
@@ -663,7 +705,7 @@
   <script src="config.js"></script>
   <script src="gas-api.js?v=20261007"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="app.js?v=20261018"></script>
+  <script src="app.js?v=20261105"></script>
   <script>
     // Tracking langsung dari tautan WhatsApp: ?noreg=001%2FSM%2F2026
     (function () {

@@ -1,4 +1,4 @@
-console.info('[SPARTA] app.js versi 20261018 termuat');
+console.info('[SPARTA] app.js versi 20261105 termuat');
 /* ============================================================
    *  CLIENT-SIDE LOGIC
    * ============================================================ */
@@ -16,8 +16,10 @@ console.info('[SPARTA] app.js versi 20261018 termuat');
     {p:'suratselesai', label:'✔️ Surat Selesai'},
     {p:'laporan', label:'📁 Laporan'}
   ];
+  // Admin TU mendapat menu tambahan Recycle Bin (surat yang dihapus + siapa yang menghapus)
+  const MENU_ADMIN = MENU_STANDAR.concat([{p:'recyclebin', label:'🗑️ Recycle Bin'}]);
   const TAB_PER_ROLE = {
-    'Admin TU'      : MENU_STANDAR,
+    'Admin TU'      : MENU_ADMIN,
     'Asisten'       : MENU_STANDAR,
     'Staf Ahli'     : MENU_STANDAR,
     'Sekda'         : MENU_STANDAR,
@@ -282,6 +284,7 @@ console.info('[SPARTA] app.js versi 20261018 termuat');
         if (tabEl.dataset.page === 'semuasurat') loadDaftarSuratMasuk();
         if (tabEl.dataset.page === 'suratselesai') loadSuratSelesai();
         if (tabEl.dataset.page === 'laporan') tampilkanSubLaporan(SUB_LAPORAN_AKTIF);
+        if (tabEl.dataset.page === 'recyclebin') loadRecycleBin();
       });
     });
   }
@@ -1983,13 +1986,15 @@ console.info('[SPARTA] app.js versi 20261018 termuat');
 
   function hapusSuratMasuk(noRegistrasi) {
     const konfirmasi = window.confirm(
-      'Hapus surat "' + noRegistrasi + '" beserta seluruh riwayat trackingnya?\n\nTindakan ini tidak bisa dibatalkan.'
+      'Hapus surat "' + noRegistrasi + '"?\n\n' +
+      'Surat akan dipindahkan ke menu Recycle Bin (tercatat atas nama akun Anda) dan tracking-nya tidak bisa lagi dibuka. ' +
+      'Admin TU masih bisa memulihkannya dari Recycle Bin.'
     );
     if (!konfirmasi) return;
 
     google.script.run
       .withSuccessHandler(function () {
-        showToast('Surat berhasil dihapus.', 'success');
+        showToast('Surat dipindahkan ke Recycle Bin.', 'success');
         loadDaftarSuratMasuk();
         loadDashboard();
       })
@@ -1998,6 +2003,110 @@ console.info('[SPARTA] app.js versi 20261018 termuat');
       })
       .deleteSuratMasuk(CURRENT_USER.token, noRegistrasi);
   }
+
+  /* ============================================================
+   *  RECYCLE BIN (Admin TU)
+   * ============================================================ */
+
+  let RECYCLE_CACHE = [];
+
+  function escRb(t) {
+    return String(t === null || t === undefined ? '' : t)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function loadRecycleBin() {
+    const tbody = document.querySelector('#tabelRecycle tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Memuat data...</td></tr>';
+    google.script.run
+      .withSuccessHandler(function (list) {
+        RECYCLE_CACHE = list || [];
+        renderRecycleBin();
+      })
+      .withFailureHandler(function (err) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Gagal memuat: ' + escRb(err.message) + '</td></tr>';
+      })
+      .getRecycleBin(CURRENT_USER.token);
+  }
+
+  function renderRecycleBin() {
+    const tbody = document.querySelector('#tabelRecycle tbody');
+    const cari = document.getElementById('cariRecycle');
+    const filter = document.getElementById('filterStatusRecycle');
+    const counter = document.getElementById('jumlahRecycle');
+    const kw = cari ? cari.value.trim().toLowerCase() : '';
+    const st = filter ? filter.value : '';
+
+    const list = RECYCLE_CACHE.filter(function (r) {
+      if (st && r.status !== st) return false;
+      if (!kw) return true;
+      return (r.noRegistrasi + ' ' + r.perihal + ' ' + r.suratDari + ' ' + r.noSurat + ' ' + r.dihapusOleh + ' ' + r.namaPenghapus)
+        .toLowerCase().indexOf(kw) !== -1;
+    });
+    if (counter) counter.textContent = 'Total: ' + list.length + ' data';
+
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">' +
+        (RECYCLE_CACHE.length ? 'Tidak ada data yang cocok.' : 'Recycle Bin kosong. Surat yang dihapus akan muncul di sini.') + '</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(function (r) {
+      const dipulihkan = r.status === 'Dipulihkan';
+      const trackingHtml = (r.tracking && r.tracking.length)
+        ? r.tracking.map(function (t) {
+            return '<div class="rb-trk"><span>' + escRb(t.tahap) + '</span> <span class="pill ' + statusPillClass(t.status) + '">' + escRb(t.status) + '</span>' +
+              (t.diprosesOleh ? ' <span class="tahap-meta">oleh ' + escRb(t.diprosesOleh) + '</span>' : '') + '</div>';
+          }).join('')
+        : '<span class="tahap-meta">Tidak ada alur persetujuan.</span>';
+      const aksi = dipulihkan
+        ? '<span class="tahap-meta">Dipulihkan ' + escRb(r.waktuDipulihkan) + '<br>oleh ' + escRb(r.dipulihkanOleh) + '</span>'
+        : '<button class="btn btn-approve btn-sm" data-pulihkan="' + escRb(r.id) + '">♻️ Pulihkan</button>';
+      return '<tr>' +
+        '<td><strong>' + escRb(r.noRegistrasi) + '</strong><div class="tahap-meta">' + escRb(r.tanggalMasuk) + '</div></td>' +
+        '<td>' + escRb(r.perihal) + '<div class="tahap-meta">' + escRb(r.suratDari) + (r.noSurat ? ' • ' + escRb(r.noSurat) : '') + '</div>' +
+          '<details class="rb-detail"><summary>Lihat riwayat tracking (' + (r.tracking ? r.tracking.length : 0) + ')</summary>' + trackingHtml + '</details></td>' +
+        '<td>' + escRb(r.jenisSurat) + '</td>' +
+        '<td><span class="pill ' + statusPillClass(r.statusAkhir) + '">' + escRb(r.statusAkhir) + '</span></td>' +
+        '<td><strong>' + escRb(r.namaPenghapus) + '</strong><div class="tahap-meta">@' + escRb(r.dihapusOleh) + ' • ' + escRb(r.rolePenghapus) + '</div></td>' +
+        '<td>' + escRb(r.waktuHapus) + '</td>' +
+        '<td>' + aksi + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function pulihkanSurat(id, tombol) {
+    const item = RECYCLE_CACHE.filter(function (r) { return r.id === id; })[0];
+    if (!item) return;
+    if (!window.confirm('Pulihkan surat "' + item.noRegistrasi + '"?\n\nSurat dan riwayat tracking-nya akan kembali seperti sebelum dihapus.')) return;
+    if (tombol) { tombol.disabled = true; tombol.textContent = 'Memulihkan...'; }
+    google.script.run
+      .withSuccessHandler(function () {
+        showToast('Surat ' + item.noRegistrasi + ' berhasil dipulihkan.', 'success');
+        loadRecycleBin();
+        loadDaftarSuratMasuk();
+        loadDashboard();
+      })
+      .withFailureHandler(function (err) {
+        if (tombol) { tombol.disabled = false; tombol.textContent = '♻️ Pulihkan'; }
+        showToast('Gagal memulihkan: ' + err.message, 'error');
+      })
+      .restoreSuratMasuk(CURRENT_USER.token, id);
+  }
+
+  document.addEventListener('input', function (e) {
+    if (e.target && e.target.id === 'cariRecycle') renderRecycleBin();
+  });
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.id === 'filterStatusRecycle') renderRecycleBin();
+  });
+  document.addEventListener('click', function (e) {
+    if (!e.target) return;
+    if (e.target.id === 'btnRefreshRecycle') loadRecycleBin();
+    const pid = e.target.getAttribute && e.target.getAttribute('data-pulihkan');
+    if (pid) pulihkanSurat(pid, e.target);
+  });
 
   document.addEventListener('input', function (e) {
     if (e.target && e.target.id === 'cariSemuaSurat') {

@@ -1127,3 +1127,12 @@
 }
 .kotak-masuk-hari.hari-sedang{ background:#fdf1da; color:var(--amber); }
 .kotak-masuk-hari.hari-lama{ background:#fbe6e4; color:var(--red); }
+
+
+/* ============ RECYCLE BIN ============ */
+#tabelRecycle{ min-width:980px; }
+#tabelRecycle td{ vertical-align:top; }
+.rb-detail{ margin-top:6px; font-size:12px; }
+.rb-detail summary{ cursor:pointer; color:var(--navy-light); font-weight:600; }
+.rb-trk{ padding:4px 0; border-bottom:1px dashed var(--border); }
+.rb-trk:last-child{ border-bottom:none; }
