@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://script.google.com">
   <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+Pro:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261109">
+  <link rel="stylesheet" href="style.css?v=20261110">
 </head>
 <body>
 
@@ -188,7 +188,35 @@
             <button type="button" class="btn btn-outline btn-sm" id="btnUnduhQrWa">Unduh foto</button>
           </div>
         </div>
+        <button type="button" class="btn btn-primary" id="btnTeruskanDariNotif" style="flex:1 1 100%;justify-content:center;display:none;">📤 Teruskan Info ke WhatsApp (Orang / Grup)</button>
         <button type="button" class="btn btn-outline" id="btnAbaikanNotifWa" style="flex:1 1 100%;justify-content:center;">Abaikan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL TERUSKAN INFORMASI SURAT (Undangan / Surat Lainnya) KE WHATSAPP ORANG ATAU GRUP
+  ========================================================== -->
+  <div class="login-modal-overlay" id="teruskanWaModalOverlay">
+    <div class="login-modal" style="max-width:480px;">
+      <div class="login-modal-header">
+        <h2>📤 Teruskan Informasi via WhatsApp</h2>
+        <button class="modal-close" id="btnTutupTeruskanWa" type="button">&times;</button>
+      </div>
+      <div class="desc">Surat <strong id="teruskanNoReg">-</strong>. Teks di bawah boleh diubah sebelum dikirim.</div>
+
+      <textarea id="teruskanPesan" class="teruskan-pesan" rows="10"></textarea>
+      <div class="tahap-meta" id="teruskanFotoInfo" style="margin:6px 0 14px;"></div>
+
+      <div class="field-block">
+        <label>No WhatsApp tujuan (opsional)</label>
+        <input type="text" id="teruskanNoHp" placeholder="Contoh: 081234567890 — kosongkan untuk memilih kontak / grup di WhatsApp">
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-wa" id="btnTeruskanKirim" style="flex:1 1 100%;justify-content:center;">Buka WhatsApp</button>
+        <button type="button" class="btn btn-outline" id="btnTeruskanSalin" style="flex:1;justify-content:center;">📋 Salin Teks</button>
+        <button type="button" class="btn btn-outline" id="btnTeruskanTutup" style="flex:1;justify-content:center;">Tutup</button>
       </div>
     </div>
   </div>
@@ -392,6 +420,21 @@
                     <div><label>Tempat</label><input type="text" id="tempatAcara" placeholder="Lokasi acara"></div>
                     <div><label>Keterangan</label><input type="text" id="keteranganAcara" placeholder="Catatan tambahan"></div>
                   </div>
+                </div>
+              </div>
+
+              <!-- Foto surat (kamera / galeri, maks 2) - muncul untuk jenis Undangan & Surat Lainnya -->
+              <div class="full" id="fotoSuratFields" style="display:none;">
+                <label>Foto Surat (opsional, maksimal 2 foto)</label>
+                <div class="foto-upload-box">
+                  <div class="foto-aksi">
+                    <button type="button" class="btn btn-outline btn-sm" id="btnAmbilFoto">📷 Ambil Foto (Kamera)</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="btnPilihFoto">🖼️ Pilih dari Galeri</button>
+                  </div>
+                  <input type="file" id="inputFotoKamera" accept="image/*" capture="environment" hidden>
+                  <input type="file" id="inputFotoGaleri" accept="image/*" multiple hidden>
+                  <div class="foto-preview-list" id="fotoPreviewList"></div>
+                  <div class="tahap-meta" id="fotoInfo">Belum ada foto. Foto akan disimpan di Google Drive dan tautannya bisa diteruskan lewat WhatsApp.</div>
                 </div>
               </div>
 
@@ -706,7 +749,7 @@
   <script src="config.js"></script>
   <script src="gas-api.js?v=20261007"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="app.js?v=20261107"></script>
+  <script src="app.js?v=20261110"></script>
   <script>
     // Tracking langsung dari tautan WhatsApp: ?noreg=001%2FSM%2F2026
     (function () {

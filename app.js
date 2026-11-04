@@ -1,4 +1,4 @@
-console.info('[SPARTA] app.js versi 20261107 termuat');
+console.info('[SPARTA] app.js versi 20261110 termuat');
 /* ============================================================
    *  CLIENT-SIDE LOGIC
    * ============================================================ */
@@ -464,6 +464,14 @@ console.info('[SPARTA] app.js versi 20261107 termuat');
       const tanpaAlur = tipeTerpilih === 'INFORMASI';
 
       undanganBox.style.display = (jenis === 'Undangan') ? 'block' : 'none';
+
+      // Foto surat: hanya untuk Undangan & Surat Lainnya. Jenis lain -> foto yang terlanjur dipilih dibuang.
+      const fotoBox = document.getElementById('fotoSuratFields');
+      if (fotoBox) {
+        const butuhFoto = jenisButuhFotoClient(jenis);
+        fotoBox.style.display = butuhFoto ? 'block' : 'none';
+        if (!butuhFoto && FOTO_SURAT.length) { FOTO_SURAT = []; renderFotoPreview(); }
+      }
       alurPersetujuanBox.style.display = pakaiAlur ? 'block' : 'none';
       tujuanInformasiBox.style.display = tanpaAlur ? 'block' : 'none';
 
@@ -527,6 +535,14 @@ console.info('[SPARTA] app.js versi 20261107 termuat');
         form.waktuAcara = document.getElementById('waktuAcara').value;
         form.tempatAcara = document.getElementById('tempatAcara').value;
         form.keteranganAcara = document.getElementById('keteranganAcara').value;
+      }
+
+      if (FOTO_SEDANG_DIPROSES > 0) {
+        showToast('Foto masih diproses, tunggu sebentar lalu simpan lagi.', 'error');
+        return;
+      }
+      if (jenisButuhFotoClient(jenis) && FOTO_SURAT.length) {
+        form.foto = FOTO_SURAT.map(function (f) { return { nama: f.nama, data: f.dataUrl }; });
       }
 
       const btn = document.getElementById('btnSimpanRegistrasi');
@@ -1288,6 +1304,13 @@ console.info('[SPARTA] app.js versi 20261107 termuat');
     }
 
     document.getElementById('notifWaNoRegistrasi').textContent = noRegistrasi;
+
+    // Tombol "Teruskan Info" hanya untuk surat Undangan / Surat Lainnya (server mengirim bisaTeruskan)
+    const btnTeruskan = document.getElementById('btnTeruskanDariNotif');
+    if (btnTeruskan) {
+      btnTeruskan.style.display = waInfo.bisaTeruskan ? 'flex' : 'none';
+      btnTeruskan.dataset.noreg = noRegistrasi;
+    }
     document.getElementById('notifWaPreview').textContent = waInfo.pesan;
 
     // Tombol QR Code hanya muncul setelah simpan registrasi (server mengirim linkTracking)
@@ -1718,6 +1741,7 @@ console.info('[SPARTA] app.js versi 20261107 termuat');
             '<button class="btn btn-outline btn-sm" onclick="bukaEditSurat(\'' + noRegEsc + '\')">✏️ Edit</button>' +
             '<button class="btn btn-reject btn-sm" onclick="hapusSuratMasuk(\'' + noRegEsc + '\')">🗑️ Hapus</button>' +
             '<button class="btn btn-wa btn-sm" onclick="kirimWaDariDaftar(\'' + noRegEsc + '\', this)">' + IKON_WA_SVG + 'Kirim WhatsApp</button>' +
+            tombolTeruskanWa(s) +
           '</div>'
         : '<span class="tahap-meta">-</span>';
       return '<tr>' +
@@ -2314,6 +2338,180 @@ console.info('[SPARTA] app.js versi 20261107 termuat');
   /* ============================================================
    *  UTIL: UNDUH FILE BASE64
    * ============================================================ */
+
+  /* ============================================================
+   *  FOTO SURAT (kamera / galeri, maks 2) - Undangan & Surat Lainnya
+   *  Foto dikecilkan di browser (maks 1600 px, JPEG) sebelum dikirim,
+   *  lalu server menyimpannya ke Google Drive.
+   * ============================================================ */
+
+  const MAKS_FOTO_SURAT_CLIENT = 2;
+  const SISI_MAKS_FOTO = 1600;
+  const MUTU_JPEG_FOTO = 0.82;
+  let FOTO_SURAT = [];            // [{ nama, dataUrl }]
+  let FOTO_SEDANG_DIPROSES = 0;
+
+  function jenisButuhFotoClient(jenis) {
+    return jenis === 'Undangan' || jenis === 'Surat Lainnya';
+  }
+
+  function kompresFoto(file) {
+    return new Promise(function (resolve, reject) {
+      if (!file || !/^image\//.test(file.type)) { reject(new Error('File bukan gambar.')); return; }
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = function () {
+        try {
+          let w = img.naturalWidth, h = img.naturalHeight;
+          const skala = Math.min(1, SISI_MAKS_FOTO / Math.max(w, h));
+          w = Math.round(w * skala); h = Math.round(h * skala);
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const g = c.getContext('2d');
+          g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); // latar putih untuk PNG transparan
+          g.drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL('image/jpeg', MUTU_JPEG_FOTO));
+        } catch (e) { reject(e); }
+        URL.revokeObjectURL(url);
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error('Format foto tidak didukung browser (mis. HEIC). Gunakan JPG/PNG atau ambil lewat kamera.'));
+      };
+      img.src = url;
+    });
+  }
+
+  function renderFotoPreview() {
+    const list = document.getElementById('fotoPreviewList');
+    const info = document.getElementById('fotoInfo');
+    const btnK = document.getElementById('btnAmbilFoto');
+    const btnG = document.getElementById('btnPilihFoto');
+    if (!list) return;
+    list.innerHTML = FOTO_SURAT.map(function (f, i) {
+      return '<div class="foto-item"><img src="' + f.dataUrl + '" alt="Foto surat ' + (i + 1) + '">' +
+        '<span class="foto-no">' + (i + 1) + '</span>' +
+        '<button type="button" data-hapus-foto="' + i + '" aria-label="Hapus foto ' + (i + 1) + '">&times;</button></div>';
+    }).join('');
+    const penuh = FOTO_SURAT.length >= MAKS_FOTO_SURAT_CLIENT;
+    if (btnK) btnK.disabled = penuh;
+    if (btnG) btnG.disabled = penuh;
+    if (info) {
+      info.textContent = FOTO_SURAT.length
+        ? FOTO_SURAT.length + ' dari ' + MAKS_FOTO_SURAT_CLIENT + ' foto dipilih. Foto disimpan di Google Drive saat surat disimpan.'
+        : 'Belum ada foto. Foto akan disimpan di Google Drive dan tautannya bisa diteruskan lewat WhatsApp.';
+    }
+  }
+
+  function tambahFotoDariFiles(files) {
+    const daftar = Array.prototype.slice.call(files || []);
+    if (!daftar.length) return;
+    const sisa = MAKS_FOTO_SURAT_CLIENT - FOTO_SURAT.length;
+    if (sisa <= 0) { showToast('Maksimal ' + MAKS_FOTO_SURAT_CLIENT + ' foto.', 'error'); return; }
+    if (daftar.length > sisa) showToast('Hanya ' + sisa + ' foto pertama yang diambil (maksimal ' + MAKS_FOTO_SURAT_CLIENT + ' foto).', 'error');
+
+    daftar.slice(0, sisa).forEach(function (file) {
+      FOTO_SEDANG_DIPROSES++;
+      kompresFoto(file).then(function (dataUrl) {
+        if (FOTO_SURAT.length < MAKS_FOTO_SURAT_CLIENT) FOTO_SURAT.push({ nama: file.name || 'foto.jpg', dataUrl: dataUrl });
+      }).catch(function (err) {
+        showToast(err.message, 'error');
+      }).then(function () {
+        FOTO_SEDANG_DIPROSES--;
+        renderFotoPreview();
+      });
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    const t = e.target;
+    if (!t) return;
+    if (t.id === 'btnAmbilFoto') document.getElementById('inputFotoKamera').click();
+    else if (t.id === 'btnPilihFoto') document.getElementById('inputFotoGaleri').click();
+    else if (t.getAttribute && t.getAttribute('data-hapus-foto') !== null) {
+      FOTO_SURAT.splice(Number(t.getAttribute('data-hapus-foto')), 1);
+      renderFotoPreview();
+    }
+  });
+
+  document.addEventListener('change', function (e) {
+    if (!e.target) return;
+    if (e.target.id === 'inputFotoKamera' || e.target.id === 'inputFotoGaleri') {
+      tambahFotoDariFiles(e.target.files);
+      e.target.value = ''; // agar foto yang sama bisa dipilih lagi setelah dihapus
+    }
+  });
+
+  /* ============================================================
+   *  TERUSKAN INFORMASI SURAT KE WHATSAPP (orang / grup) + tautan foto
+   * ============================================================ */
+
+  function tombolTeruskanWa(s) {
+    if (!jenisButuhFotoClient(s.JenisSurat)) return '';
+    const noRegEsc = String(s.NoRegistrasi).replace(/'/g, "\\'");
+    return '<button class="btn btn-primary btn-sm" onclick="teruskanWaDariDaftar(\'' + noRegEsc + '\', this)">📤 Teruskan WA</button>';
+  }
+
+  function teruskanWaDariDaftar(noRegistrasi, btn) {
+    if (btn) btn.disabled = true;
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (btn) btn.disabled = false;
+        bukaModalTeruskanWa(res);
+      })
+      .withFailureHandler(function (err) {
+        if (btn) btn.disabled = false;
+        showToast('Gagal menyiapkan pesan: ' + err.message, 'error');
+      })
+      .getInfoTeruskanInfo(CURRENT_USER.token, noRegistrasi);
+  }
+
+  function bukaModalTeruskanWa(res) {
+    document.getElementById('teruskanNoReg').textContent = res.noRegistrasi;
+    document.getElementById('teruskanPesan').value = res.pesan;
+    document.getElementById('teruskanNoHp').value = '';
+    const info = document.getElementById('teruskanFotoInfo');
+    info.textContent = (res.fotoLinks && res.fotoLinks.length)
+      ? '✅ ' + res.fotoLinks.length + ' tautan foto surat (Google Drive) sudah disertakan di teks.'
+      : 'ℹ️ Surat ini tidak memiliki foto, hanya informasi teks yang diteruskan.';
+    document.getElementById('teruskanWaModalOverlay').classList.add('show');
+  }
+
+  function tutupModalTeruskanWa() {
+    document.getElementById('teruskanWaModalOverlay').classList.remove('show');
+  }
+
+  document.addEventListener('click', function (e) {
+    const t = e.target && e.target.closest ? e.target.closest('button') : null;
+    if (!t) return;
+
+    if (t.id === 'btnTeruskanDariNotif') {
+      teruskanWaDariDaftar(t.dataset.noreg, t);
+    } else if (t.id === 'btnTutupTeruskanWa' || t.id === 'btnTeruskanTutup') {
+      tutupModalTeruskanWa();
+    } else if (t.id === 'btnTeruskanKirim') {
+      const pesan = document.getElementById('teruskanPesan').value;
+      let no = document.getElementById('teruskanNoHp').value.replace(/[^0-9]/g, '');
+      if (no) {
+        if (no.charAt(0) === '0') no = '62' + no.substring(1);
+        else if (no.substring(0, 2) !== '62') no = '62' + no;
+      }
+      // Tanpa nomor: WhatsApp membuka pilihan kontak/grup. Dengan nomor: langsung ke chat orang tersebut.
+      window.open('https://wa.me/' + no + '?text=' + encodeURIComponent(pesan), '_blank');
+    } else if (t.id === 'btnTeruskanSalin') {
+      const area = document.getElementById('teruskanPesan');
+      const berhasil = function () { showToast('Teks disalin. Tempel di WhatsApp.', 'success'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(area.value).then(berhasil).catch(function () {
+          area.select(); document.execCommand('copy'); berhasil();
+        });
+      } else { area.select(); document.execCommand('copy'); berhasil(); }
+    }
+  });
+
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.id === 'teruskanWaModalOverlay') tutupModalTeruskanWa();
+  });
 
   function unduhBase64(res) {
     try {
