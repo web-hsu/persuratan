@@ -1801,9 +1801,9 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
   function terapkanFilterSuratSelesai() {
     const counter = document.getElementById('jumlahSuratSelesai');
     const cari = document.getElementById('cariSuratSelesai');
-    // Undangan & Surat Lainnya tidak diambil pengirim -> disembunyikan (juga untuk data cache lama)
+    // Undangan tidak diambil pengirim -> disembunyikan (juga untuk data cache lama)
     let list = SURAT_SELESAI_CACHE.filter(function (s) {
-      return s.JenisSurat !== 'Undangan' && s.JenisSurat !== 'Surat Lainnya';
+      return s.JenisSurat !== 'Undangan';
     });
 
     if (FILTER_TAHUN_SURAT_SELESAI === 'kosong') {
