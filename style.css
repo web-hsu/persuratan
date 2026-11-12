@@ -1453,3 +1453,20 @@ textarea.teruskan-pesan{ min-height:210px; font-size:13px; line-height:1.5; whit
   min-width:1100px;
   border-collapse:separate; border-spacing:0; /* header sticky tanpa garis bergetar */
 }
+
+
+/* ============ MENUNGGU PERSETUJUAN: daftar punya area scroll sendiri (lebih rapi saat ratusan surat) ============ */
+#kotakMasukSaya{
+  max-height:calc(100vh - 230px); min-height:240px;
+  overflow-y:auto; overscroll-behavior:contain;
+  border-radius:16px; padding-right:4px;
+  scrollbar-width:thin; scrollbar-color:var(--gold) rgba(255,255,255,.35);
+  -webkit-overflow-scrolling:touch;
+}
+#kotakMasukSaya::-webkit-scrollbar{ width:10px; }
+#kotakMasukSaya::-webkit-scrollbar-track{ background:rgba(255,255,255,.35); border-radius:8px; }
+#kotakMasukSaya::-webkit-scrollbar-thumb{ background:var(--gold); border-radius:8px; }
+#kotakMasukSaya::-webkit-scrollbar-thumb:hover{ background:var(--navy); }
+@media (max-width:640px){
+  #kotakMasukSaya{ max-height:calc(100vh - 200px); }
+}
