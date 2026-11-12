@@ -1503,3 +1503,28 @@ textarea.teruskan-pesan{ min-height:210px; font-size:13px; line-height:1.5; whit
 #statsGrid .progress-percent-mini{ font-size:24px; font-weight:800; color:#7a5200; }
 #statsGrid .progress-track-mini{ height:9px; margin-top:8px; }
 #statsGrid .progress-stat-box .tahap-meta{ font-size:12.5px; font-weight:600; color:#2b3645; margin-top:7px !important; }
+
+
+/* ============ DASHBOARD: grafik dipadatkan agar ketiga grafik terlihat tanpa scroll (desktop/tablet) ============ */
+@media (min-width:561px){
+  .chart-grid{ gap:14px; }
+  .chart-grid > .card{ padding:16px 22px 14px; }
+  .chart-grid > .card h2{ font-size:15px; margin-bottom:2px; }
+  .chart-grid > .card .desc{ margin-bottom:6px; font-size:12px; }
+
+  /* Surat Masuk per Bulan & Distribusi Jenis Surat: tinggi dikurangi (dari 380px) */
+  #chartBulanSurat, #chartJenisSurat{ min-height:210px; margin-top:4px; }
+  #chartBulanSurat .vbar-chart-bars{ padding-top:22px; }
+
+  /* Donat di kiri, legenda di kanan -> hemat tinggi */
+  #chartJenisSurat .donut-chart-wrap{ flex-direction:row; justify-content:center; align-items:center; gap:22px; }
+  #chartJenisSurat .donut-chart{ width:min(46%, 190px); margin:0; flex-shrink:0; }
+  #chartJenisSurat .donut-total-num{ font-size:clamp(18px, 2.4vw, 28px); }
+  #chartJenisSurat .donut-total-text{ font-size:11px; }
+  #chartJenisSurat .donut-slice-label{ font-size:12px; }
+  #chartJenisSurat .donut-legend{ flex-direction:column; align-items:flex-start; gap:5px; font-size:12px; margin:0; }
+
+  /* Tahap Menunggu: baris batang lebih rapat */
+  #chartTahapMenunggu{ height:auto; max-height:190px; overflow-y:auto; margin-top:4px; }
+  #chartTahapMenunggu .hbar-row{ padding:5px 2px; }
+}
