@@ -1,4 +1,4 @@
-console.info('[SPARTA] app.js versi 20261115 termuat');
+console.info('[SPARTA] app.js versi 20261117 termuat');
 /* ============================================================
    *  CLIENT-SIDE LOGIC
    * ============================================================ */
@@ -16,7 +16,9 @@ console.info('[SPARTA] app.js versi 20261115 termuat');
     {p:'laporan', label:'📁 Laporan'}
   ];
   // Admin TU mendapat menu tambahan Recycle Bin (surat yang dihapus + siapa yang menghapus)
-  const MENU_ADMIN = MENU_STANDAR.concat([{p:'recyclebin', label:'🗑️ Recycle Bin'}, {p:'pengaturan', label:'⚙️ Pengaturan'}]);
+  // Menu Pengaturan (No WA / server WhatsApp) disembunyikan sementara. Untuk menampilkannya lagi, tambahkan
+  // {p:'pengaturan', label:'⚙️ Pengaturan'} ke daftar di bawah ini.
+  const MENU_ADMIN = MENU_STANDAR.concat([{p:'recyclebin', label:'🗑️ Recycle Bin'}]);
   const TAB_PER_ROLE = {
     'Admin TU'      : MENU_ADMIN,
     'Asisten'       : MENU_STANDAR,
@@ -2149,24 +2151,72 @@ console.info('[SPARTA] app.js versi 20261115 termuat');
   // Status pengiriman otomatis (null = belum diketahui). Dipakai tombol "Kirim WhatsApp" agar tidak
   // memanggil server bila pengiriman otomatis belum aktif.
   let GATEWAY_AKTIF = null;
+  let SRV_TERSIMPAN = false;     // alamat server + API key sudah tersimpan
+  let SRV_POLLING = false;
 
   function setInfoNoWaApp(teks) {
     const el = document.getElementById('infoNoWaApp');
     if (el) el.textContent = teks;
   }
 
+  function tampilkanBlokProvider() {
+    const server = document.getElementById('selProviderWa').value === 'server';
+    document.getElementById('blokServerWa').style.display = server ? 'block' : 'none';
+    document.getElementById('blokFonnteWa').style.display = server ? 'none' : 'block';
+  }
+
   function terapkanPengaturanWa(res) {
     res = res || {};
     GATEWAY_AKTIF = !!res.gatewayAktif;
+    SRV_TERSIMPAN = !!(res.srvUrl && res.srvKeyTersimpan);
     document.getElementById('inputNoWaApp').value = res.noWa || '';
+    document.getElementById('selProviderWa').value = res.provider === 'fonnte' ? 'fonnte' : 'server';
+    document.getElementById('inputSrvUrl').value = res.srvUrl || '';
+    document.getElementById('inputSrvKey').value = '';
     document.getElementById('inputGwToken').value = '';
     document.getElementById('chkGwAktif').checked = !!res.gatewayAktif;
+    document.getElementById('infoSrvKey').textContent = res.srvKeyTersimpan
+      ? 'API key sudah tersimpan. Kosongkan kolom ini bila tidak ingin menggantinya.' : 'Belum ada API key tersimpan.';
     document.getElementById('infoGwToken').textContent = res.tokenTersimpan
-      ? 'Token sudah tersimpan. Kosongkan kolom ini bila tidak ingin menggantinya.'
-      : 'Belum ada token tersimpan.';
+      ? 'Token sudah tersimpan. Kosongkan kolom ini bila tidak ingin menggantinya.' : 'Belum ada token tersimpan.';
     setInfoNoWaApp(res.gatewayAktif
-      ? '✅ Pengiriman otomatis AKTIF dari nomor ' + (res.noWa || '-') + '.'
+      ? '✅ Pengiriman otomatis AKTIF dari nomor ' + (res.noWa || 'aplikasi') + '.'
       : 'Pengiriman otomatis belum aktif — pesan masih dikirim lewat WhatsApp petugas.');
+    tampilkanBlokProvider();
+    cekStatusServerWa();
+  }
+
+  function renderStatusServerWa(res) {
+    const st = document.getElementById('waSrvStatus');
+    const box = document.getElementById('waSrvQrBox');
+    const img = document.getElementById('waSrvQr');
+    if (!st) return;
+    res = res || {};
+    box.style.display = 'none';
+    if (res.state === 'connected') {
+      st.textContent = '✅ Tersambung sebagai nomor ' + (res.number || '-') + '.';
+    } else if (res.state === 'qr') {
+      st.textContent = 'Menunggu scan QR Code...';
+      if (res.qr) { img.src = res.qr; box.style.display = 'block'; }
+    } else if (res.state === 'connecting') {
+      st.textContent = 'Server sedang menyambung ke WhatsApp...';
+    } else if (res.state === 'logged_out') {
+      st.textContent = 'Nomor terputus. QR Code baru akan muncul sebentar lagi...';
+    } else if (res.state === 'tidak_terhubung') {
+      st.textContent = '⚠️ ' + (res.alasan || 'Server tidak dapat dihubungi.');
+    } else {
+      st.textContent = 'Isi alamat server & API key, lalu Simpan.';
+    }
+  }
+
+  // Cek status server WhatsApp (dipanggil otomatis tiap beberapa detik selama halaman Pengaturan terbuka).
+  function cekStatusServerWa() {
+    if (!CURRENT_USER || !SRV_TERSIMPAN || SRV_POLLING) { if (!SRV_TERSIMPAN) renderStatusServerWa({ state: 'belum_diatur' }); return; }
+    SRV_POLLING = true;
+    google.script.run.withSilentErrors()
+      .withSuccessHandler(function (res) { SRV_POLLING = false; renderStatusServerWa(res); })
+      .withFailureHandler(function (err) { SRV_POLLING = false; renderStatusServerWa({ state: 'tidak_terhubung', alasan: err.message }); })
+      .getStatusServerWa(CURRENT_USER.token);
   }
 
   function loadPengaturanWa() {
@@ -2179,7 +2229,7 @@ console.info('[SPARTA] app.js versi 20261115 termuat');
   }
 
   function kunciFormPengaturanWa(kunci) {
-    ['btnSimpanNoWaApp', 'btnHapusNoWaApp', 'btnKirimWaUji'].forEach(function (id) {
+    ['btnSimpanNoWaApp', 'btnHapusNoWaApp', 'btnKirimWaUji', 'btnPutusSrv'].forEach(function (id) {
       const el = document.getElementById(id); if (el) el.disabled = kunci;
     });
   }
@@ -2202,18 +2252,29 @@ console.info('[SPARTA] app.js versi 20261115 termuat');
   function initPengaturanWa() {
     const form = document.getElementById('formPengaturanWa');
     if (!form) return;
+    document.getElementById('selProviderWa').addEventListener('change', tampilkanBlokProvider);
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       simpanPengaturanWa({
         noWa: document.getElementById('inputNoWaApp').value.trim(),
+        provider: document.getElementById('selProviderWa').value,
+        srvUrl: document.getElementById('inputSrvUrl').value.trim(),
+        srvKey: document.getElementById('inputSrvKey').value.trim(),
         gwToken: document.getElementById('inputGwToken').value.trim(),
         aktif: document.getElementById('chkGwAktif').checked
       }, 'Pengaturan WhatsApp disimpan.');
     });
+
     document.getElementById('btnHapusNoWaApp').addEventListener('click', function () {
-      if (!confirm('Hapus token gateway dan nonaktifkan pengiriman otomatis? Pesan akan kembali dikirim lewat WhatsApp petugas.')) return;
-      simpanPengaturanWa({ noWa: document.getElementById('inputNoWaApp').value.trim(), hapusToken: true }, 'Token dihapus, pengiriman otomatis dinonaktifkan.');
+      if (!confirm('Hapus API key / token dan nonaktifkan pengiriman otomatis? Pesan akan kembali dikirim lewat WhatsApp petugas.')) return;
+      simpanPengaturanWa({
+        noWa: document.getElementById('inputNoWaApp').value.trim(),
+        srvUrl: document.getElementById('inputSrvUrl').value.trim(),
+        hapusToken: true
+      }, 'Kredensial dihapus, pengiriman otomatis dinonaktifkan.');
     });
+
     document.getElementById('btnKirimWaUji').addEventListener('click', function () {
       const no = document.getElementById('inputNoWaUji').value.trim();
       if (!no) { showToast('Isi nomor tujuan uji terlebih dahulu.', 'error'); return; }
@@ -2223,6 +2284,30 @@ console.info('[SPARTA] app.js versi 20261115 termuat');
         .withFailureHandler(function (err) { kunciFormPengaturanWa(false); showToast(err.message, 'error'); })
         .kirimWaUji(CURRENT_USER.token, no);
     });
+
+    document.getElementById('btnCekStatusSrv').addEventListener('click', function () {
+      if (!SRV_TERSIMPAN) { showToast('Simpan alamat server dan API key terlebih dahulu.', 'error'); return; }
+      document.getElementById('waSrvStatus').textContent = 'Memeriksa...';
+      cekStatusServerWa();
+    });
+
+    document.getElementById('btnPutusSrv').addEventListener('click', function () {
+      if (!SRV_TERSIMPAN) { showToast('Simpan alamat server dan API key terlebih dahulu.', 'error'); return; }
+      if (!confirm('Putuskan nomor WhatsApp dari server? Pengiriman otomatis berhenti sampai nomor ditautkan lagi lewat QR Code.')) return;
+      kunciFormPengaturanWa(true);
+      google.script.run
+        .withSuccessHandler(function () { kunciFormPengaturanWa(false); showToast('Nomor diputus. Tunggu QR Code baru.', 'success'); setTimeout(cekStatusServerWa, 2500); })
+        .withFailureHandler(function (err) { kunciFormPengaturanWa(false); showToast(err.message, 'error'); })
+        .logoutServerWa(CURRENT_USER.token);
+    });
+
+    // Perbarui status/QR otomatis selama halaman Pengaturan terbuka & metode "server" dipilih.
+    setInterval(function () {
+      const halaman = document.getElementById('page-pengaturan');
+      const metode = document.getElementById('selProviderWa');
+      if (!halaman || !halaman.classList.contains('active') || document.hidden) return;
+      if (metode && metode.value === 'server') cekStatusServerWa();
+    }, 4000);
   }
 
   let RECYCLE_CACHE = [];

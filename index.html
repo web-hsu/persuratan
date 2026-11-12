@@ -607,24 +607,61 @@
       <div class="page" id="page-pengaturan">
         <div class="card">
           <h2>⚙️ Pengaturan</h2>
-          <div class="desc">Satu nomor WhatsApp aplikasi untuk semua akun. Bila pengiriman otomatis diaktifkan, pesan ke pemohon (registrasi, persetujuan, status, pengingat ambil surat) terkirim otomatis dari nomor ini tanpa membuka WhatsApp petugas. Token diperoleh dari akun gateway tempat nomor ini disambungkan dan tidak ditampilkan kembali setelah disimpan.</div>
+          <div class="desc">Satu nomor WhatsApp aplikasi untuk semua akun. Bila pengiriman otomatis diaktifkan, pesan ke pemohon (registrasi, persetujuan, status, pengingat ambil surat) terkirim otomatis dari nomor ini tanpa membuka WhatsApp petugas. Nomor ditautkan lewat server WhatsApp sendiri (scan QR di halaman ini) atau gateway pihak ketiga. Kunci/token disimpan di server dan tidak ditampilkan kembali.</div>
 
-          <form id="formPengaturanWa" style="max-width:560px;">
+          <form id="formPengaturanWa" style="max-width:580px;">
             <div class="field-block">
               <label for="inputNoWaApp">No WhatsApp Aplikasi</label>
               <input type="text" id="inputNoWaApp" placeholder="Contoh: 081234567890" inputmode="tel" autocomplete="off">
-              <div class="tahap-meta" style="margin-top:6px;">Nomor yang tersambung ke layanan gateway di bawah. Dicantumkan juga sebagai Kontak Tata Usaha pada pesan.</div>
+              <div class="tahap-meta" style="margin-top:6px;">Nomor kantor yang menjadi pengirim. Dicantumkan juga sebagai Kontak Tata Usaha pada pesan.</div>
             </div>
+
             <div class="field-block">
-              <label for="inputGwToken">Token Gateway WhatsApp (mis. Fonnte)</label>
-              <input type="password" id="inputGwToken" placeholder="Tempel token dari akun gateway" autocomplete="new-password">
-              <div class="tahap-meta" id="infoGwToken" style="margin-top:6px;">Memuat...</div>
+              <label for="selProviderWa">Metode pengiriman otomatis</label>
+              <select id="selProviderWa">
+                <option value="server">Server WhatsApp sendiri (scan QR di sini)</option>
+                <option value="fonnte">Gateway pihak ketiga (Fonnte, pakai token)</option>
+              </select>
             </div>
+
+            <div id="blokServerWa">
+              <div class="field-block">
+                <label for="inputSrvUrl">Alamat Server</label>
+                <input type="text" id="inputSrvUrl" placeholder="https://wa.instansi.go.id" autocomplete="off">
+              </div>
+              <div class="field-block">
+                <label for="inputSrvKey">API Key Server</label>
+                <input type="password" id="inputSrvKey" placeholder="Sama dengan API_KEY di file .env server" autocomplete="new-password">
+                <div class="tahap-meta" id="infoSrvKey" style="margin-top:6px;"></div>
+              </div>
+
+              <div class="card" style="background:#f8fafc;box-shadow:none;margin:0 0 16px;padding:14px 16px;">
+                <h2 style="font-size:14px;">Tautan Nomor WhatsApp</h2>
+                <div id="waSrvStatus" class="tahap-meta" style="font-size:13px;">Isi alamat server & API key, lalu Simpan.</div>
+                <div id="waSrvQrBox" style="display:none;text-align:center;margin:12px 0 4px;">
+                  <img id="waSrvQr" alt="QR Code tautan WhatsApp" style="width:240px;height:240px;border:1px solid #dde4ee;border-radius:10px;padding:6px;background:#fff;">
+                  <div style="font-size:12.5px;color:#5b6b80;margin-top:6px;line-height:1.5;">Di HP pemegang nomor kantor: WhatsApp &rarr; <b>Perangkat tertaut</b> &rarr; <b>Tautkan perangkat</b> &rarr; scan kode ini.</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                  <button type="button" class="btn btn-outline btn-sm" id="btnCekStatusSrv">🔄 Cek Status</button>
+                  <button type="button" class="btn btn-outline btn-sm" id="btnPutusSrv">Putuskan Nomor</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="blokFonnteWa" style="display:none;">
+              <div class="field-block">
+                <label for="inputGwToken">Token Gateway WhatsApp (mis. Fonnte)</label>
+                <input type="password" id="inputGwToken" placeholder="Tempel token dari akun gateway" autocomplete="new-password">
+                <div class="tahap-meta" id="infoGwToken" style="margin-top:6px;"></div>
+              </div>
+            </div>
+
             <label class="checkbox-item" style="margin:4px 0 16px;"><input type="checkbox" id="chkGwAktif"> Aktifkan pengiriman otomatis dari nomor aplikasi</label>
             <div class="tahap-meta" id="infoNoWaApp" style="margin-bottom:14px;"></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
               <button type="submit" class="btn btn-primary" id="btnSimpanNoWaApp">💾 Simpan</button>
-              <button type="button" class="btn btn-outline" id="btnHapusNoWaApp">Hapus Token &amp; Nonaktifkan</button>
+              <button type="button" class="btn btn-outline" id="btnHapusNoWaApp">Hapus Kredensial &amp; Nonaktifkan</button>
             </div>
 
             <div class="card" style="background:#f8fafc;box-shadow:none;margin:20px 0 0;padding:14px 16px;">
@@ -786,7 +823,7 @@
   <script src="config.js"></script>
   <script src="gas-api.js?v=20261007"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="app.js?v=20261115"></script>
+  <script src="app.js?v=20261117"></script>
   <script>
     // Tracking langsung dari tautan WhatsApp: ?noreg=001%2FSM%2F2026
     (function () {
