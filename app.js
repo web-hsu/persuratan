@@ -1515,6 +1515,55 @@ console.info('[SPARTA] app.js versi 20261117 termuat');
     box.style.gridColumn = 'span ' + sisaKolom;
   }
 
+
+  /* ---------- Animasi Dashboard: angka berjalan naik, batang & donat tumbuh setiap menu Dashboard dibuka ---------- */
+  function animasiAngka(el, durasi, tunda) {
+    const teks = (el.textContent || '').trim();
+    const m = /^(\d+)(%?)$/.exec(teks);
+    if (!m) return;
+    const akhir = parseInt(m[1], 10), sufiks = m[2];
+    if (!akhir) return;
+    el.textContent = '0' + sufiks;
+    const mulai = performance.now() + (tunda || 0);
+    function langkah(t) {
+      if (t < mulai) { requestAnimationFrame(langkah); return; }
+      const p = Math.min(1, (t - mulai) / durasi);
+      const e = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      el.textContent = Math.round(akhir * e) + sufiks;
+      if (p < 1) requestAnimationFrame(langkah);
+    }
+    requestAnimationFrame(langkah);
+  }
+
+  function animasiDashboard() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const page = document.getElementById('page-dashboard');
+    if (!page || !page.classList.contains('active')) return; // hanya saat Dashboard sedang tampil
+
+    // 1) Angka berjalan naik (papan statistik, nilai batang, total & irisan donat, jumlah tahap)
+    page.querySelectorAll('#statsGrid .num, .progress-percent-mini, .vbar-value, .donut-total-num, .donut-slice-label, .hbar-value')
+      .forEach(function (el, i) { animasiAngka(el, 1000, Math.min(i * 40, 400)); });
+
+    // 2) Batang & isi bar tumbuh dari nol (transisi CSS)
+    const tumbuh = [];
+    page.querySelectorAll('.vbar-item').forEach(function (el) { tumbuh.push([el, 'height', el.style.height]); });
+    page.querySelectorAll('.hbar-fill, .progress-fill-mini').forEach(function (el) { tumbuh.push([el, 'width', el.style.width]); });
+    tumbuh.forEach(function (x) { x[0].style.transition = 'none'; x[0].style[x[1]] = '0'; });
+    void page.offsetHeight; // paksa browser menghitung ulang agar transisi berjalan
+    tumbuh.forEach(function (x, i) {
+      x[0].style.transition = '';
+      setTimeout(function () { x[0].style[x[1]] = x[2]; }, 30 + Math.min(i * 50, 400));
+    });
+
+    // 3) Donat tersapu searah jarum jam
+    page.querySelectorAll('.donut-chart').forEach(function (el) {
+      el.classList.remove('donut-sapu');
+      void el.offsetWidth;
+      el.classList.add('donut-sapu');
+      setTimeout(function () { el.classList.remove('donut-sapu'); }, 1400);
+    });
+  }
+
   function loadDashboard() {
     const grid = document.getElementById('statsGrid');
 
@@ -1574,6 +1623,8 @@ console.info('[SPARTA] app.js versi 20261117 termuat');
             );
           }
         }
+
+        requestAnimationFrame(animasiDashboard);
       })
       .withFailureHandler(function (err) {
         grid.innerHTML = '<div class="warn-box">Gagal memuat statistik: ' + err.message + '</div>';
