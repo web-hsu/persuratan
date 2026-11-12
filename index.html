@@ -161,10 +161,12 @@
   <div class="login-modal-overlay" id="notifWaModalOverlay">
     <div class="login-modal" style="max-width:440px;">
       <div class="login-modal-header">
-        <h2>📨 Kirim Info ke Pemohon?</h2>
+        <h2 id="notifWaJudul">📨 Kirim Info ke Pemohon?</h2>
         <button class="modal-close" id="btnTutupNotifWa">&times;</button>
       </div>
       <div class="desc"><span id="notifWaDescAwal">Tindakan pada surat </span><strong id="notifWaNoRegistrasi">-</strong><span id="notifWaDescAkhir"> berhasil disimpan. Kirim informasi ini ke pemohon surat melalui WhatsApp?</span></div>
+
+      <div class="info-box" id="notifWaGwNote" style="display:none;margin-bottom:14px;">✅ Pesan sudah terkirim otomatis dari nomor aplikasi.</div>
 
       <div class="card" style="background:#f8fafc;box-shadow:none;padding:14px 16px;margin-bottom:16px;">
         <div class="tahap-meta" id="notifWaPreview" style="white-space:pre-line;font-size:12.5px;"></div>
@@ -601,6 +603,41 @@
         </div>
       </div>
 
+      <!-- ============== PENGATURAN (Admin TU) ============== -->
+      <div class="page" id="page-pengaturan">
+        <div class="card">
+          <h2>⚙️ Pengaturan</h2>
+          <div class="desc">Satu nomor WhatsApp aplikasi untuk semua akun. Bila pengiriman otomatis diaktifkan, pesan ke pemohon (registrasi, persetujuan, status, pengingat ambil surat) terkirim otomatis dari nomor ini tanpa membuka WhatsApp petugas. Token diperoleh dari akun gateway tempat nomor ini disambungkan dan tidak ditampilkan kembali setelah disimpan.</div>
+
+          <form id="formPengaturanWa" style="max-width:560px;">
+            <div class="field-block">
+              <label for="inputNoWaApp">No WhatsApp Aplikasi</label>
+              <input type="text" id="inputNoWaApp" placeholder="Contoh: 081234567890" inputmode="tel" autocomplete="off">
+              <div class="tahap-meta" style="margin-top:6px;">Nomor yang tersambung ke layanan gateway di bawah. Dicantumkan juga sebagai Kontak Tata Usaha pada pesan.</div>
+            </div>
+            <div class="field-block">
+              <label for="inputGwToken">Token Gateway WhatsApp (mis. Fonnte)</label>
+              <input type="password" id="inputGwToken" placeholder="Tempel token dari akun gateway" autocomplete="new-password">
+              <div class="tahap-meta" id="infoGwToken" style="margin-top:6px;">Memuat...</div>
+            </div>
+            <label class="checkbox-item" style="margin:4px 0 16px;"><input type="checkbox" id="chkGwAktif"> Aktifkan pengiriman otomatis dari nomor aplikasi</label>
+            <div class="tahap-meta" id="infoNoWaApp" style="margin-bottom:14px;"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button type="submit" class="btn btn-primary" id="btnSimpanNoWaApp">💾 Simpan</button>
+              <button type="button" class="btn btn-outline" id="btnHapusNoWaApp">Hapus Token &amp; Nonaktifkan</button>
+            </div>
+
+            <div class="card" style="background:#f8fafc;box-shadow:none;margin:20px 0 0;padding:14px 16px;">
+              <h2 style="font-size:14px;">Kirim Pesan Uji</h2>
+              <div class="field-block" style="margin-bottom:10px;">
+                <input type="text" id="inputNoWaUji" placeholder="No WhatsApp tujuan uji, mis. 081234567890" inputmode="tel" autocomplete="off">
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" id="btnKirimWaUji">📨 Kirim Pesan Uji</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- ============== RECYCLE BIN (Admin TU) ============== -->
       <div class="page" id="page-recyclebin">
         <div class="card">
@@ -749,7 +786,7 @@
   <script src="config.js"></script>
   <script src="gas-api.js?v=20261007"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="app.js?v=20261113"></script>
+  <script src="app.js?v=20261115"></script>
   <script>
     // Tracking langsung dari tautan WhatsApp: ?noreg=001%2FSM%2F2026
     (function () {

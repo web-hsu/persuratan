@@ -1,4 +1,4 @@
-console.info('[SPARTA] app.js versi 20261110 termuat');
+console.info('[SPARTA] app.js versi 20261115 termuat');
 /* ============================================================
    *  CLIENT-SIDE LOGIC
    * ============================================================ */
@@ -16,7 +16,7 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
     {p:'laporan', label:'📁 Laporan'}
   ];
   // Admin TU mendapat menu tambahan Recycle Bin (surat yang dihapus + siapa yang menghapus)
-  const MENU_ADMIN = MENU_STANDAR.concat([{p:'recyclebin', label:'🗑️ Recycle Bin'}]);
+  const MENU_ADMIN = MENU_STANDAR.concat([{p:'recyclebin', label:'🗑️ Recycle Bin'}, {p:'pengaturan', label:'⚙️ Pengaturan'}]);
   const TAB_PER_ROLE = {
     'Admin TU'      : MENU_ADMIN,
     'Asisten'       : MENU_STANDAR,
@@ -39,6 +39,7 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
     initSidebarToggle();
     initEditSuratModal();
     initNotifWaModal();
+    initPengaturanWa();
     cobaPulihkanSesi();
 
     // Grid statistik dashboard pakai auto-fit (jumlah kolom berubah sesuai lebar layar) -
@@ -284,6 +285,7 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
         if (tabEl.dataset.page === 'suratselesai') loadSuratSelesai();
         if (tabEl.dataset.page === 'laporan') tampilkanSubLaporan(SUB_LAPORAN_AKTIF);
         if (tabEl.dataset.page === 'recyclebin') loadRecycleBin();
+        if (tabEl.dataset.page === 'pengaturan') loadPengaturanWa();
       });
     });
   }
@@ -1288,6 +1290,15 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
   }
 
   function tampilkanKonfirmasiNotifWa(waInfo, noRegistrasi, dariDaftar) {
+    // Pengiriman otomatis aktif & berhasil: tidak perlu konfirmasi kecuali masih ada aksi lain (QR / Teruskan Info).
+    if (waInfo && waInfo.gatewayTerkirim && !waInfo.linkTracking && !waInfo.bisaTeruskan) {
+      showToast('✅ Pesan WhatsApp terkirim otomatis ke pemohon.', 'success');
+      return;
+    }
+    // Pengiriman otomatis aktif tetapi gagal: beri tahu alasannya, lalu tawarkan kirim manual seperti biasa.
+    if (waInfo && waInfo.gatewayAlasan) {
+      showToast('Pengiriman otomatis gagal: ' + waInfo.gatewayAlasan + '. Gunakan kirim manual.', 'error');
+    }
     const overlay = document.getElementById('notifWaModalOverlay');
     const btnKirim = document.getElementById('btnKirimNotifWa');
     const warning = document.getElementById('notifWaNoHpWarning');
@@ -1302,6 +1313,16 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
         dAwal.textContent = dariDaftar ? 'Kirim informasi status surat ' : 'Tindakan pada surat ';
         dAkhir.textContent = dariDaftar ? ' ke pemohon melalui WhatsApp?' : ' berhasil disimpan. Kirim informasi ini ke pemohon surat melalui WhatsApp?';
       }
+    }
+
+    const terkirimOtomatis = !!(waInfo && waInfo.gatewayTerkirim);
+    const judulNotif = document.getElementById('notifWaJudul');
+    const catatanGw = document.getElementById('notifWaGwNote');
+    if (judulNotif) judulNotif.textContent = terkirimOtomatis ? '✅ Pesan Terkirim' : '📨 Kirim Info ke Pemohon?';
+    if (catatanGw) catatanGw.style.display = terkirimOtomatis ? 'block' : 'none';
+    if (terkirimOtomatis && dAwal && dAkhir) {
+      dAwal.textContent = 'Registrasi surat ';
+      dAkhir.textContent = ' berhasil disimpan.';
     }
 
     document.getElementById('notifWaNoRegistrasi').textContent = noRegistrasi;
@@ -1339,7 +1360,11 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
       });
     }
 
-    if (waInfo.waLink) {
+    if (terkirimOtomatis) {
+      btnKirim.disabled = true;
+      btnKirim.style.display = 'none';
+      warning.style.display = 'none';
+    } else if (waInfo.waLink) {
       btnKirim.dataset.walink = waInfo.waLink;
       btnKirim.disabled = false;
       btnKirim.style.display = 'flex';
@@ -2013,16 +2038,41 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
   // mode: undefined = info status biasa | 'ambil' = pengingat pengambilan surat (Surat Selesai)
   function kirimWaDariDaftar(noRegistrasi, btn, mode) {
     if (btn) btn.disabled = true;
-    google.script.run
-      .withSuccessHandler(function (waInfo) {
-        if (btn) btn.disabled = false;
-        tampilkanKonfirmasiNotifWa(waInfo, noRegistrasi, mode === 'ambil' ? 'ambil' : true);
-      })
-      .withFailureHandler(function (err) {
-        if (btn) btn.disabled = false;
-        showToast('Gagal menyiapkan pesan WhatsApp: ' + err.message, 'error');
-      })
-      .getInfoKirimWa(CURRENT_USER.token, noRegistrasi, mode || '');
+
+    const tampilkanModalManual = function () {
+      google.script.run
+        .withSuccessHandler(function (waInfo) {
+          if (btn) btn.disabled = false;
+          tampilkanKonfirmasiNotifWa(waInfo, noRegistrasi, mode === 'ambil' ? 'ambil' : true);
+        })
+        .withFailureHandler(function (err) {
+          if (btn) btn.disabled = false;
+          showToast('Gagal menyiapkan pesan WhatsApp: ' + err.message, 'error');
+        })
+        .getInfoKirimWa(CURRENT_USER.token, noRegistrasi, mode || '');
+    };
+
+    // Pengiriman otomatis dari nomor aplikasi (bila diaktifkan Admin TU); bila tidak, alur manual lama.
+    if (GATEWAY_AKTIF !== false) {
+      google.script.run
+        .withSuccessHandler(function (res) {
+          GATEWAY_AKTIF = !!(res && res.gatewayAktif);
+          if (res && res.terkirim) {
+            if (btn) btn.disabled = false;
+            showToast('✅ Pesan WhatsApp terkirim otomatis ke pemohon.', 'success');
+            return;
+          }
+          if (res && res.gatewayAktif && res.alasan) showToast('Pengiriman otomatis gagal: ' + res.alasan + '. Gunakan kirim manual.', 'error');
+          tampilkanModalManual();
+        })
+        .withFailureHandler(function (err) {
+          showToast('Gagal mengirim otomatis: ' + err.message, 'error');
+          tampilkanModalManual();
+        })
+        .kirimWaSurat(CURRENT_USER.token, noRegistrasi, mode || '');
+      return;
+    }
+    tampilkanModalManual();
   }
 
   function bukaEditSurat(noRegistrasi) {
@@ -2091,6 +2141,89 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
   /* ============================================================
    *  RECYCLE BIN (Admin TU)
    * ============================================================ */
+
+  /* ============================================================
+   *  PENGATURAN: NO WHATSAPP APLIKASI (Admin TU)
+   * ============================================================ */
+
+  // Status pengiriman otomatis (null = belum diketahui). Dipakai tombol "Kirim WhatsApp" agar tidak
+  // memanggil server bila pengiriman otomatis belum aktif.
+  let GATEWAY_AKTIF = null;
+
+  function setInfoNoWaApp(teks) {
+    const el = document.getElementById('infoNoWaApp');
+    if (el) el.textContent = teks;
+  }
+
+  function terapkanPengaturanWa(res) {
+    res = res || {};
+    GATEWAY_AKTIF = !!res.gatewayAktif;
+    document.getElementById('inputNoWaApp').value = res.noWa || '';
+    document.getElementById('inputGwToken').value = '';
+    document.getElementById('chkGwAktif').checked = !!res.gatewayAktif;
+    document.getElementById('infoGwToken').textContent = res.tokenTersimpan
+      ? 'Token sudah tersimpan. Kosongkan kolom ini bila tidak ingin menggantinya.'
+      : 'Belum ada token tersimpan.';
+    setInfoNoWaApp(res.gatewayAktif
+      ? '✅ Pengiriman otomatis AKTIF dari nomor ' + (res.noWa || '-') + '.'
+      : 'Pengiriman otomatis belum aktif — pesan masih dikirim lewat WhatsApp petugas.');
+  }
+
+  function loadPengaturanWa() {
+    if (!document.getElementById('inputNoWaApp') || !CURRENT_USER) return;
+    setInfoNoWaApp('Memuat...');
+    google.script.run
+      .withSuccessHandler(terapkanPengaturanWa)
+      .withFailureHandler(function (err) { setInfoNoWaApp('Gagal memuat: ' + err.message); })
+      .getPengaturanWa(CURRENT_USER.token);
+  }
+
+  function kunciFormPengaturanWa(kunci) {
+    ['btnSimpanNoWaApp', 'btnHapusNoWaApp', 'btnKirimWaUji'].forEach(function (id) {
+      const el = document.getElementById(id); if (el) el.disabled = kunci;
+    });
+  }
+
+  function simpanPengaturanWa(form, pesanBerhasil) {
+    kunciFormPengaturanWa(true);
+    google.script.run
+      .withSuccessHandler(function (res) {
+        kunciFormPengaturanWa(false);
+        terapkanPengaturanWa(res);
+        showToast(pesanBerhasil, 'success');
+      })
+      .withFailureHandler(function (err) {
+        kunciFormPengaturanWa(false);
+        showToast(err.message, 'error');
+      })
+      .simpanPengaturanWa(CURRENT_USER.token, form);
+  }
+
+  function initPengaturanWa() {
+    const form = document.getElementById('formPengaturanWa');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      simpanPengaturanWa({
+        noWa: document.getElementById('inputNoWaApp').value.trim(),
+        gwToken: document.getElementById('inputGwToken').value.trim(),
+        aktif: document.getElementById('chkGwAktif').checked
+      }, 'Pengaturan WhatsApp disimpan.');
+    });
+    document.getElementById('btnHapusNoWaApp').addEventListener('click', function () {
+      if (!confirm('Hapus token gateway dan nonaktifkan pengiriman otomatis? Pesan akan kembali dikirim lewat WhatsApp petugas.')) return;
+      simpanPengaturanWa({ noWa: document.getElementById('inputNoWaApp').value.trim(), hapusToken: true }, 'Token dihapus, pengiriman otomatis dinonaktifkan.');
+    });
+    document.getElementById('btnKirimWaUji').addEventListener('click', function () {
+      const no = document.getElementById('inputNoWaUji').value.trim();
+      if (!no) { showToast('Isi nomor tujuan uji terlebih dahulu.', 'error'); return; }
+      kunciFormPengaturanWa(true);
+      google.script.run
+        .withSuccessHandler(function () { kunciFormPengaturanWa(false); showToast('Pesan uji terkirim. Periksa WhatsApp tujuan.', 'success'); })
+        .withFailureHandler(function (err) { kunciFormPengaturanWa(false); showToast(err.message, 'error'); })
+        .kirimWaUji(CURRENT_USER.token, no);
+    });
+  }
 
   let RECYCLE_CACHE = [];
 
