@@ -1528,3 +1528,17 @@ textarea.teruskan-pesan{ min-height:210px; font-size:13px; line-height:1.5; whit
   #chartTahapMenunggu{ height:auto; max-height:190px; overflow-y:auto; margin-top:4px; }
   #chartTahapMenunggu .hbar-row{ padding:5px 2px; }
 }
+
+
+/* ============ DASHBOARD: isi papan statistik rata tengah (horizontal & vertikal) ============ */
+#statsGrid .stat-box{
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  text-align:center; padding:14px 12px;
+}
+#statsGrid .stat-box .num{ line-height:1; }
+#statsGrid .stat-box .label{ overflow-wrap:break-word; word-break:normal; text-align:center; }
+#statsGrid .progress-stat-box .progress-mini-header{
+  flex-direction:column; align-items:center; justify-content:center; gap:2px; width:100%;
+}
+#statsGrid .progress-track-mini{ width:100%; }
+#statsGrid .progress-stat-box .tahap-meta{ text-align:center; }

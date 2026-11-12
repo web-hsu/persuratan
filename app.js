@@ -1537,7 +1537,7 @@ console.info('[SPARTA] app.js versi 20261117 termuat');
           '<div class="stat-box amber stat-box-clickable" onclick="bukaDaftarSuratStatus(\'Dalam Proses\')"><div class="num">' + stats.dalamProses + '</div><div class="label">Dalam Proses</div></div>' +
           '<div class="stat-box green stat-box-clickable" onclick="bukaDaftarSuratStatus(\'Selesai / Disetujui\')"><div class="num">' + stats.disetujui + '</div><div class="label">Selesai / Disetujui</div></div>' +
           '<div class="stat-box red stat-box-clickable" onclick="bukaDaftarSuratStatus(\'DITOLAK_PERBAIKAN\')"><div class="num">' + (stats.ditolak + stats.perbaikan) + '</div><div class="label">Ditolak / Perlu Perbaikan</div></div>' +
-          '<div class="stat-box stat-box-clickable" style="border-left-color:var(--navy-light);" onclick="bukaDaftarSuratStatus(\'Informasi (Tanpa Persetujuan)\')"><div class="num" style="color:var(--navy-light);">' + (stats.informasi || 0) + '</div><div class="label">Informasi (Undangan/Lainnya)</div></div>';
+          '<div class="stat-box stat-box-clickable" style="border-left-color:var(--navy-light);" onclick="bukaDaftarSuratStatus(\'Informasi (Tanpa Persetujuan)\')"><div class="num" style="color:var(--navy-light);">' + (stats.informasi || 0) + '</div><div class="label">Informasi (Undangan / Lainnya)</div></div>';
 
         // Kotak "Persentase Penyelesaian" versi ringkas - seukuran kotak statistik lain.
         const persen = stats.total > 0 ? Math.round((stats.disetujui / stats.total) * 100) : 0;
