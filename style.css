@@ -1457,7 +1457,7 @@ textarea.teruskan-pesan{ min-height:210px; font-size:13px; line-height:1.5; whit
 
 /* ============ MENUNGGU PERSETUJUAN: daftar punya area scroll sendiri (lebih rapi saat ratusan surat) ============ */
 #kotakMasukSaya{
-  max-height:calc(100vh - 520px); min-height:260px;
+  max-height:calc(100vh - 380px); min-height:260px;
   overflow-y:auto; overscroll-behavior:contain;
   border-radius:16px; padding-right:4px;
   scrollbar-width:thin; scrollbar-color:var(--gold) rgba(255,255,255,.35);

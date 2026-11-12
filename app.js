@@ -282,7 +282,7 @@ console.info('[SPARTA] app.js versi 20261117 termuat');
         if (!tabEl.classList.contains('has-sub')) tutupSidebarMobile(); // dropdown tetap terbuka agar sub-menu bisa dipilih
 
         if (tabEl.dataset.page === 'dashboard') loadDashboard();
-        if (tabEl.dataset.page === 'disposisi') loadKotakMasukSaya();
+        if (tabEl.dataset.page === 'disposisi') { loadKotakMasukSaya(); setTimeout(sesuaikanTinggiKotakMasuk, 50); }
         if (tabEl.dataset.page === 'semuasurat') loadDaftarSuratMasuk();
         if (tabEl.dataset.page === 'suratselesai') loadSuratSelesai();
         if (tabEl.dataset.page === 'laporan') tampilkanSubLaporan(SUB_LAPORAN_AKTIF);
@@ -826,6 +826,17 @@ console.info('[SPARTA] app.js versi 20261117 termuat');
     el.style.display = 'flex';
   }
 
+  // Daftar "Menunggu Persetujuan" diperpanjang sampai dasar layar (tidak ada ruang kosong di bawah kartu).
+  function sesuaikanTinggiKotakMasuk() {
+    const box = document.getElementById('kotakMasukSaya');
+    if (!box || !box.offsetParent) return; // halaman sedang tersembunyi
+    box.style.maxHeight = 'none';
+    const atas = box.getBoundingClientRect().top;
+    const tinggi = Math.max(260, window.innerHeight - atas - 52); // 52px = padding kartu + jarak bawah
+    box.style.maxHeight = tinggi + 'px';
+  }
+  window.addEventListener('resize', sesuaikanTinggiKotakMasuk);
+
   function renderKotakMasukSaya() {
     const box = document.getElementById('kotakMasukSaya');
     const counter = document.getElementById('jumlahKotakMasuk');
@@ -863,6 +874,7 @@ console.info('[SPARTA] app.js versi 20261117 termuat');
         '  </div>' +
         '</div>';
     }).join('');
+    sesuaikanTinggiKotakMasuk();
     // Muat lebih awal alur 3 surat teratas (yang paling mungkin dibuka) agar pop up langsung terisi.
     list.slice(0, 3).forEach(function (s, i) { setTimeout(function () { prefetchDisposisi(s.NoRegistrasi); }, 400 + i * 500); });
   }
