@@ -1598,3 +1598,32 @@ textarea.teruskan-pesan{ min-height:210px; font-size:13px; line-height:1.5; whit
 @media (max-width:560px){
   .catatan-privasi{ font-size:15.5px; padding:12px 14px; }
 }
+
+
+/* ============ DASHBOARD: tata letak papan statistik seragam ============ */
+/* Setiap papan memakai baris yang sama: angka (tinggi tetap) -> label (2 baris) -> info tambahan */
+#statsGrid:not(.stats-grid-role) .stat-box{
+  display:grid;
+  grid-template-columns:100%;
+  grid-template-rows:60px 2.7em auto auto;
+  align-content:start;
+  justify-items:center;
+  row-gap:4px;
+  min-height:130px;
+  padding:14px 12px 12px;
+  text-align:center;
+}
+#statsGrid:not(.stats-grid-role) .stat-box .num,
+#statsGrid:not(.stats-grid-role) .progress-stat-box .progress-percent-mini{
+  grid-row:1; flex:none; display:flex; align-items:center; justify-content:center;
+  width:100%; height:60px; margin:0; padding:0;
+  font-family:inherit; font-size:34px; font-weight:800; line-height:1; letter-spacing:-.5px;
+}
+#statsGrid:not(.stats-grid-role) .progress-stat-box .progress-percent-mini{ color:#7a5200; }
+#statsGrid:not(.stats-grid-role) .stat-box .label{
+  grid-row:2; display:flex; align-items:flex-start; justify-content:center;
+  width:100%; margin:0; padding:0; font-size:14px; font-weight:700; line-height:1.3; text-align:center;
+}
+#statsGrid:not(.stats-grid-role) .progress-stat-box .progress-mini-header{ display:contents; }
+#statsGrid:not(.stats-grid-role) .progress-stat-box .progress-track-mini{ grid-row:3; width:100%; margin:2px 0 0; order:0; }
+#statsGrid:not(.stats-grid-role) .progress-stat-box .tahap-meta{ grid-row:4; margin:2px 0 0 !important; order:0; font-size:12px; line-height:1.3; text-align:center; }
