@@ -532,7 +532,8 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
 
       if (jenis === 'Undangan') {
         form.tanggalAcara = document.getElementById('tanggalAcara').value;
-        form.waktuAcara = document.getElementById('waktuAcara').value;
+        var wktBaru = document.getElementById('waktuAcara').value;
+        form.waktuAcara = wktBaru ? wktBaru + ' ' + document.getElementById('zonaAcara').value : '';
         form.tempatAcara = document.getElementById('tempatAcara').value;
         form.keteranganAcara = document.getElementById('keteranganAcara').value;
       }
@@ -1976,7 +1977,8 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
       };
       if (document.getElementById('editUndanganFields').style.display !== 'none') {
         payload.tanggalAcara = document.getElementById('editTanggalAcara').value;
-        payload.waktuAcara = document.getElementById('editWaktuAcara').value;
+        var wktEdit = document.getElementById('editWaktuAcara').value;
+        payload.waktuAcara = wktEdit ? wktEdit + ' ' + document.getElementById('editZonaAcara').value : '';
         payload.tempatAcara = document.getElementById('editTempatAcara').value;
         payload.keteranganAcara = document.getElementById('editKeteranganAcara').value;
       }
@@ -2048,7 +2050,10 @@ console.info('[SPARTA] app.js versi 20261110 termuat');
         if (s.JenisSurat === 'Undangan' && res.undangan) {
           undanganBox.style.display = 'block';
           document.getElementById('editTanggalAcara').value = res.undangan.tanggalAcara || '';
-          document.getElementById('editWaktuAcara').value = res.undangan.waktu || '';
+          // Nilai tersimpan berbentuk "HH:mm WIB"; data lama tanpa zona dianggap WITA.
+          var mWkt = /^(\d{1,2}):(\d{2})(?::\d{2})?\s*(WIB|WITA|WIT)?/i.exec(String(res.undangan.waktu || '').trim());
+          document.getElementById('editWaktuAcara').value = mWkt ? ('0' + mWkt[1]).slice(-2) + ':' + mWkt[2] : '';
+          document.getElementById('editZonaAcara').value = mWkt && mWkt[3] ? mWkt[3].toUpperCase() : 'WITA';
           document.getElementById('editTempatAcara').value = res.undangan.tempat || '';
           document.getElementById('editKeteranganAcara').value = res.undangan.keterangan || '';
         } else {
