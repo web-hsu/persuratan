@@ -1442,3 +1442,14 @@ tbody tr:hover td, tr:hover td{ background:rgba(255,255,255,.58); }
 }
 textarea.teruskan-pesan{ min-height:210px; font-size:13px; line-height:1.5; white-space:pre-wrap; }
 @media (max-width:640px){ .foto-item{ width:calc(50% - 6px); height:auto; aspect-ratio:1/1; } }
+
+
+/* ============ SURAT SELESAI: area scroll setinggi layar (scroll kiri-kanan selalu terlihat, sama seperti Daftar Surat Masuk) ============ */
+.table-wrap:has(#tabelSuratSelesai){
+  max-height:calc(100vh - 250px); min-height:380px;
+  overscroll-behavior:contain;
+}
+#tabelSuratSelesai{
+  min-width:1100px;
+  border-collapse:separate; border-spacing:0; /* header sticky tanpa garis bergetar */
+}
