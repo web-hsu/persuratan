@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <title>SPARTA (Android)</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22%3E%3Cdefs%3E%3ClinearGradient%20id=%22g%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20offset=%220%22%20stop-color=%22%23e8c06a%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23b8862e%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx=%2250%22%20cy=%2250%22%20r=%2248%22%20fill=%22url%28%23g%29%22/%3E%3Cg%20transform=%22translate%2850%2050%29%20scale%28.78%29%20translate%28-50%20-51%29%22%20fill=%22none%22%20stroke=%22%230a2540%22%20stroke-linejoin=%22round%22%20stroke-linecap=%22round%22%3E%3Cpath%20d=%22M50%2010%20L80%2024%20V52%20C80%2071%2067%2086%2050%2093%20C33%2086%2020%2071%2020%2052%20V24%20Z%22%20stroke-width=%227%22/%3E%3Cpath%20d=%22M35%2073%20L50%2027%20L65%2073%22%20stroke-width=%228%22/%3E%3C/g%3E%3C/svg%3E">
+  <meta name="theme-color" content="#0a2540">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+Pro:wght@600;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css?v=20261128">
+  <link rel="stylesheet" href="android.css?v=1">
+</head>
+<body class="android-app">
+
+  <!-- =========================================================
+       LAYAR LOGIN (halaman depan versi Android) - tanpa halaman publik
+  ========================================================== -->
+  <div id="landingPage" class="android-login">
+    <div class="al-brand">
+      <div class="al-emblem">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <path d="M50 10 L80 24 V52 C80 71 67 86 50 93 C33 86 20 71 20 52 V24 Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/>
+          <path d="M35 73 L50 27 L65 73" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="al-judul">&mdash; SPARTA &mdash;</div>
+      <div class="al-sub">Sistem Pelayanan Administrasi Persuratan</div>
+    </div>
+
+    <div class="al-card">
+      <h1>Masuk</h1>
+      <p class="al-desc">Khusus petugas internal yang memiliki akun.</p>
+
+      <form id="formLogin" autocomplete="on">
+        <label for="loginUsername">Username</label>
+        <input type="text" id="loginUsername" placeholder="Username Anda" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
+
+        <label for="loginPassword">Password</label>
+        <div class="al-pass">
+          <input type="password" id="loginPassword" placeholder="Password Anda" required autocomplete="current-password">
+          <button type="button" id="btnLihatPassword" aria-label="Tampilkan password">👁</button>
+        </div>
+
+        <div class="warn-box" id="loginErrorBox" style="display:none;margin:0 0 14px;"></div>
+
+        <button type="submit" class="btn btn-primary btn-block al-masuk" id="btnSubmitLogin">Masuk</button>
+      </form>
+    </div>
+
+    <div class="al-footer">SPARTA &copy; <span id="tahunFooter"></span> &mdash; Sekretariat Daerah</div>
+
+    <!-- Elemen bawaan yang masih dibaca app.js (tidak dipakai/ditampilkan di versi Android) -->
+    <div hidden>
+      <button id="btnBukaLogin" type="button"></button>
+      <div id="loginModalOverlay"></div>
+      <button id="btnTutupLogin" type="button"></button>
+      <input id="inputNoRegLanding"><button id="btnCariLanding" type="button"></button>
+      <div id="hasilTrackingLanding"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL EDIT SURAT (Admin TU / Super Admin)
+  ========================================================== -->
+  <div class="login-modal-overlay" id="editSuratModalOverlay">
+    <div class="login-modal" style="max-width:520px;">
+      <div class="login-modal-header">
+        <h2>✏️ Edit Surat Masuk</h2>
+        <button class="modal-close" id="btnTutupEditSurat">&times;</button>
+      </div>
+      <div class="desc">No Registrasi: <strong id="editNoRegistrasiLabel">-</strong> &middot; Jenis Surat: <strong id="editJenisSuratLabel">-</strong> &middot; Tujuan: <strong id="editTujuanSuratLabel">-</strong></div>
+      <div class="info-box" style="margin-bottom:16px;">Jenis Surat &amp; Tujuan Surat tidak bisa diubah di sini karena menentukan alur persetujuan yang sudah dibuat. Untuk mengubahnya, hapus surat ini lalu registrasikan ulang.</div>
+
+      <form id="formEditSurat">
+        <input type="hidden" id="editNoRegistrasi">
+        <div class="form-grid">
+          <div>
+            <label>Surat Dari</label>
+            <select id="editSuratDariTipe" required>
+              <option value="SKPD">SKPD</option>
+              <option value="Umum">Umum</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div>
+            <label>Nama Pengirim / SKPD</label>
+            <input type="text" id="editSuratDariNama" required>
+          </div>
+          <div>
+            <label>No Surat</label>
+            <input type="text" id="editNoSurat" required>
+          </div>
+          <div>
+            <label>No WhatsApp Pengirim</label>
+            <input type="text" id="editNoWhatsApp">
+          </div>
+          <div class="full">
+            <label>Perihal</label>
+            <input type="text" id="editPerihal" required>
+          </div>
+          <div class="full">
+            <label>Tindak Lanjut Diteruskan Kepada</label>
+            <input type="text" id="editTindakLanjut">
+          </div>
+
+          <div class="full" id="editUndanganFields" style="display:none;">
+            <div class="card" style="background:#f8fafc;box-shadow:none;margin-bottom:0;">
+              <h2 style="font-size:14px;">Detail Undangan</h2>
+              <div class="form-grid">
+                <div><label>Tanggal Acara</label><input type="text" id="editTanggalAcara" class="input-tgl-dmy" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" autocomplete="off"></div>
+                <div><label>Waktu</label><div style="display:flex;gap:8px;"><input type="time" id="editWaktuAcara" style="flex:1;min-width:0;"><select id="editZonaAcara" style="flex:0 0 96px;" aria-label="Zona waktu"><option value="WIB">WIB</option><option value="WITA" selected>WITA</option><option value="WIT">WIT</option></select></div></div>
+                <div><label>Tempat</label><input type="text" id="editTempatAcara"></div>
+                <div><label>Keterangan</label><input type="text" id="editKeteranganAcara"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="full">
+            <label>Isi Disposisi</label>
+            <textarea id="editIsiDisposisi"></textarea>
+          </div>
+        </div>
+
+        <div class="warn-box" id="editSuratErrorBox" style="display:none;margin:14px 0;"></div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;">
+          <button type="submit" class="btn btn-primary" id="btnSimpanEditSurat">💾 Simpan Perubahan</button>
+          <button type="button" class="btn btn-outline" id="btnBatalEditSurat">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL KONFIRMASI NOTIFIKASI WHATSAPP KE PEMOHON
+  ========================================================== -->
+  <div class="login-modal-overlay" id="notifWaModalOverlay">
+    <div class="login-modal" style="max-width:440px;">
+      <div class="login-modal-header">
+        <h2 id="notifWaJudul">📨 Kirim Info ke Pemohon?</h2>
+        <button class="modal-close" id="btnTutupNotifWa">&times;</button>
+      </div>
+      <div class="desc"><span id="notifWaDescAwal">Tindakan pada surat </span><strong id="notifWaNoRegistrasi">-</strong><span id="notifWaDescAkhir"> berhasil disimpan. Kirim informasi ini ke pemohon surat melalui WhatsApp?</span></div>
+
+      <div class="info-box" id="notifWaGwNote" style="display:none;margin-bottom:14px;">✅ Pesan sudah terkirim otomatis dari nomor aplikasi.</div>
+
+      <div class="card" style="background:#f8fafc;box-shadow:none;padding:14px 16px;margin-bottom:16px;">
+        <div class="tahap-meta" id="notifWaPreview" style="white-space:pre-line;font-size:12.5px;"></div>
+      </div>
+
+      <div id="notifWaQrBox" style="display:none;text-align:center;margin:-4px 0 16px;">
+        <img id="notifWaQrPreview" alt="QR Code tracking surat" style="width:150px;height:150px;border:1px solid #dde4ee;border-radius:10px;padding:6px;background:#fff;">
+        <div style="font-size:12px;color:#5b6b80;margin-top:6px;">QR Code tracking surat</div>
+      </div>
+
+      <div class="warn-box" id="notifWaNoHpWarning" style="display:none;margin-bottom:14px;">Nomor WhatsApp pemohon tidak tersedia pada data surat ini, sehingga tidak bisa dikirim otomatis.</div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-wa" id="btnKirimNotifWa" style="flex:1;justify-content:center;"><svg class="ikon-btn" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.5 14.4c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.23 1.36.2 1.88.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.05 21.8h-.01a9.9 9.9 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.89 9.88zM20.52 3.45A11.8 11.8 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.17-3.48-8.42z"/></svg>Kirim WhatsApp</button>
+        <button type="button" class="btn btn-primary" id="btnCetakQrNotifWa" style="flex:1;justify-content:center;display:none;"><svg class="ikon-btn" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h8v8H3V3zm2 2v4h4V5H5zm-2 8h8v8H3v-8zm2 2v4h4v-4H5zM13 3h8v8h-8V3zm2 2v4h4V5h-4zM13 13h2v2h-2v-2zm2 2h2v2h-2v-2zm-2 2h2v2h-2v-2zm4-4h2v2h-2v-2zm2 2h2v2h-2v-2zm-2 2h2v2h-2v-2zm2 2h2v2h-2v-2z"/></svg>Print QR Code</button>
+        <div id="notifWaQrTip" style="display:none;flex:1 1 100%;background:#eef6ff;border:1px solid #c9dcf5;border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.5;color:#0b2540;">
+          <div id="notifWaQrTipStatus" style="font-weight:700;margin-bottom:4px;"></div>
+          Di WhatsApp yang baru terbuka, klik kotak pesan lalu tekan <b>Ctrl+V</b> untuk menempel foto QR Code, kemudian kirim. Teks pesan terkirim terpisah dari foto.
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button type="button" class="btn btn-outline btn-sm" id="btnSalinUlangQr">Salin ulang foto</button>
+            <button type="button" class="btn btn-outline btn-sm" id="btnUnduhQrWa">Unduh foto</button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" id="btnTeruskanDariNotif" style="flex:1 1 100%;justify-content:center;display:none;">📤 Teruskan Info ke WhatsApp (Orang / Grup)</button>
+        <button type="button" class="btn btn-outline" id="btnAbaikanNotifWa" style="flex:1 1 100%;justify-content:center;">Abaikan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL TERUSKAN INFORMASI SURAT (Undangan / Surat Lainnya) KE WHATSAPP ORANG ATAU GRUP
+  ========================================================== -->
+  <div class="login-modal-overlay" id="teruskanWaModalOverlay">
+    <div class="login-modal" style="max-width:480px;">
+      <div class="login-modal-header">
+        <h2>📤 Teruskan Informasi via WhatsApp</h2>
+        <button class="modal-close" id="btnTutupTeruskanWa" type="button">&times;</button>
+      </div>
+      <div class="desc">Surat <strong id="teruskanNoReg">-</strong>. Teks di bawah boleh diubah sebelum dikirim.</div>
+
+      <textarea id="teruskanPesan" class="teruskan-pesan" rows="10"></textarea>
+      <div class="tahap-meta" id="teruskanFotoInfo" style="margin:6px 0 14px;"></div>
+
+      <div class="field-block">
+        <label>No WhatsApp tujuan (opsional)</label>
+        <input type="text" id="teruskanNoHp" placeholder="Contoh: 081234567890 — kosongkan untuk memilih kontak / grup di WhatsApp">
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-wa" id="btnTeruskanKirim" style="flex:1 1 100%;justify-content:center;">Buka WhatsApp</button>
+        <button type="button" class="btn btn-outline" id="btnTeruskanSalin" style="flex:1;justify-content:center;">📋 Salin Teks</button>
+        <button type="button" class="btn btn-outline" id="btnTeruskanTutup" style="flex:1;justify-content:center;">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL KONFIRMASI LEWATI TAHAP YANG BELUM DIPROSES
+  ========================================================== -->
+  <div class="login-modal-overlay" id="skipConfirmModalOverlay">
+    <div class="login-modal" style="max-width:460px;">
+      <div class="login-modal-header">
+        <h2>⚠️ Tahap Sebelumnya Belum Diproses</h2>
+        <button class="modal-close" id="btnTutupSkipConfirm">&times;</button>
+      </div>
+      <div class="desc" id="skipConfirmMessage">-</div>
+
+      <div class="warn-box" style="margin-bottom:16px;">Jika Anda melanjutkan, tahap tersebut akan otomatis ditandai <strong>Disetujui</strong> (dicatat sebagai dilewati, bukan diproses langsung oleh pemegang wewenangnya) — lalu tahap yang Anda tuju akan diproses seperti biasa.</div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-fix" id="btnLanjutkanSkip" style="flex:1;justify-content:center;">Lanjutkan &amp; Tandai Disetujui</button>
+        <button type="button" class="btn btn-outline" id="btnBatalSkip" style="flex:1;justify-content:center;">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       APLIKASI UTAMA (setelah login berhasil)
+  ========================================================== -->
+  <div id="appPage" style="display:none;">
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <div class="emblem">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50 10 L80 24 V52 C80 71 67 86 50 93 C33 86 20 71 20 52 V24 Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/>
+              <path d="M35 73 L50 27 L65 73" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-title">SPARTA</div>
+            <div class="brand-sub">Sistem Pelayanan Administrasi Persuratan</div>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav" id="navTabs">
+          <!-- menu digenerate sesuai role oleh JavaScript -->
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-chip">
+            <div class="avatar" id="avatarInisial">-</div>
+            <div>
+              <span id="userNamaLabel">-</span>
+              <span class="role-tag" id="userRoleLabel">-</span>
+            </div>
+          </div>
+          <button class="btn-keluar" id="btnKembaliLanding">🚪 Keluar</button>
+        </div>
+      </aside>
+
+      <div class="main-area">
+        <div class="topbar-mobile">
+          <button class="hamburger" id="btnToggleSidebar" aria-label="Buka menu">☰</button>
+          <div class="topbar-mobile-title">SPARTA</div>
+        </div>
+
+        <div class="container">
+
+      <!-- ============== DASHBOARD ============== -->
+      <div class="page" id="page-dashboard">
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-box"><div class="num">-</div><div class="label">Total Surat</div></div>
+          <div class="stat-box amber"><div class="num">-</div><div class="label">Dalam Proses</div></div>
+          <div class="stat-box green"><div class="num">-</div><div class="label">Selesai / Disetujui</div></div>
+          <div class="stat-box red"><div class="num">-</div><div class="label">Ditolak / Perlu Perbaikan</div></div>
+          <div class="stat-box" style="border-left-color:var(--navy-light);"><div class="num" style="color:var(--navy-light);">-</div><div class="label">Informasi (Undangan / Lainnya)</div></div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="card">
+            <h2>Surat Masuk per Bulan</h2>
+            <div class="desc">6 bulan terakhir.</div>
+            <div class="chart-box" id="chartBulanSurat"><div class="empty-state">Memuat data...</div></div>
+          </div>
+
+          <div class="card">
+            <h2>Distribusi Jenis Surat</h2>
+            <div class="desc">Proporsi tiap jenis surat.</div>
+            <div class="chart-box" id="chartJenisSurat"><div class="empty-state">Memuat data...</div></div>
+          </div>
+
+          <div class="card">
+            <h2>Tahap Menunggu Persetujuan</h2>
+            <div class="desc">Tahap mana yang saat ini paling banyak menumpuk.</div>
+            <div class="chart-box" id="chartTahapMenunggu"><div class="empty-state">Memuat data...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== REGISTRASI SURAT MASUK (Admin TU) ============== -->
+      <div class="page" id="page-registrasi">
+        <div class="card">
+          <h2>Registrasi Surat Masuk</h2>
+          <div class="desc">Nomor registrasi akan dibuat otomatis oleh sistem setelah surat disimpan.</div>
+
+          <form id="formRegistrasi">
+            <div class="form-grid">
+              <div>
+                <label>Surat Dari</label>
+                <select id="suratDariTipe" required>
+                  <option value="">-- Pilih --</option>
+                  <option value="SKPD">SKPD</option>
+                  <option value="Umum">Umum</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+              <div>
+                <label>Nama Pengirim / SKPD</label>
+                <input type="text" id="suratDariNama" placeholder="Nama instansi / perorangan" autocomplete="off" required>
+              </div>
+
+              <div>
+                <label>No Surat</label>
+                <input type="text" id="noSurat" placeholder="Contoh: 001/DINSOS/2026" required>
+              </div>
+              <div>
+                <label>Jenis Surat</label>
+                <select id="jenisSurat" required>
+                  <option value="">-- Pilih Jenis Surat --</option>
+                </select>
+              </div>
+
+              <div class="full">
+                <label>Perihal</label>
+                <input type="text" id="perihal" placeholder="Perihal / ringkasan isi surat" required>
+              </div>
+
+              <div>
+                <label>Tindak Lanjut Diteruskan Kepada</label>
+                <input type="text" id="tindakLanjut" placeholder="Contoh: Kabag Umum / Asisten I">
+              </div>
+              <div>
+                <label>No WhatsApp Pengirim</label>
+                <input type="text" id="noWhatsApp" placeholder="Contoh: 081234567890">
+              </div>
+
+              <!-- Tombol pilihan tipe tracking - menentukan checklist mana yang tampil -->
+              <div class="full">
+                <label>Tipe Tracking Surat</label>
+                <div class="toggle-group">
+                  <button type="button" class="toggle-btn" id="btnTipePersetujuan" data-tipe="PERSETUJUAN">✅ Perlu Persetujuan</button>
+                  <button type="button" class="toggle-btn" id="btnTipeInformasi" data-tipe="INFORMASI">ℹ️ Hanya Informasi</button>
+                </div>
+              </div>
+
+              <!-- Alur Persetujuan (centang manual) - muncul jika tipe tracking = Perlu Persetujuan -->
+              <div class="full" id="alurPersetujuanBox" style="display:none;">
+                <label>Alur Persetujuan (centang tahap yang berlaku, bisa lebih dari satu)</label>
+                <div class="checkbox-group">
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Paraf Asisten"> Paraf Asisten</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Paraf Staf Ahli"> Paraf Staf Ahli</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Paraf Sekda"> Paraf Sekda</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Tanda Tangan Sekda"> Tanda Tangan Sekda</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Tanda Tangan Wakil Bupati"> Tanda Tangan Wakil Bupati</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-alur" value="Tanda Tangan Bupati"> Tanda Tangan Bupati</label>
+                </div>
+              </div>
+
+              <!-- Tujuan Surat (centang manual, murni informasi) - muncul jika tipe tracking = Hanya Informasi -->
+              <div class="full" id="tujuanInformasiBox" style="display:none;">
+                <label>Tujuan Surat (centang, bisa lebih dari satu — murni informasi, tanpa perlu persetujuan)</label>
+                <div class="checkbox-group">
+                  <label class="checkbox-item"><input type="checkbox" class="chk-tujuan" value="Sekda"> Sekda</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-tujuan" value="Wakil Bupati"> Wakil Bupati</label>
+                  <label class="checkbox-item"><input type="checkbox" class="chk-tujuan" value="Bupati"> Bupati</label>
+                </div>
+              </div>
+
+              <div class="full" id="alurInfoBox" style="display:none;">
+                <label>Pratinjau Alur Persetujuan Terpilih</label>
+                <div class="field-row" id="alurInfoText"></div>
+              </div>
+
+              <!-- Field khusus Undangan -->
+              <div class="full" id="undanganFields" style="display:none;">
+                <div class="card" style="background:#f8fafc;box-shadow:none;margin-bottom:0;">
+                  <h2 style="font-size:14px;">Detail Undangan</h2>
+                  <div class="form-grid">
+                    <div><label>Tanggal Acara</label><input type="text" id="tanggalAcara" class="input-tgl-dmy" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" autocomplete="off"></div>
+                    <div><label>Waktu</label><div style="display:flex;gap:8px;"><input type="time" id="waktuAcara" style="flex:1;min-width:0;"><select id="zonaAcara" style="flex:0 0 96px;" aria-label="Zona waktu"><option value="WIB">WIB</option><option value="WITA" selected>WITA</option><option value="WIT">WIT</option></select></div></div>
+                    <div><label>Tempat</label><input type="text" id="tempatAcara" placeholder="Lokasi acara"></div>
+                    <div><label>Keterangan</label><input type="text" id="keteranganAcara" placeholder="Catatan tambahan"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Foto surat (kamera / galeri, maks 2) - muncul untuk jenis Undangan & Surat Lainnya -->
+              <div class="full" id="fotoSuratFields" style="display:none;">
+                <label>Foto Surat (opsional, maksimal 2 foto)</label>
+                <div class="foto-upload-box">
+                  <div class="foto-aksi">
+                    <button type="button" class="btn btn-outline btn-sm" id="btnAmbilFoto">📷 Ambil Foto (Kamera)</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="btnPilihFoto">🖼️ Pilih dari Galeri</button>
+                  </div>
+                  <input type="file" id="inputFotoKamera" accept="image/*" capture="environment" hidden>
+                  <input type="file" id="inputFotoGaleri" accept="image/*" multiple hidden>
+                  <div class="foto-preview-list" id="fotoPreviewList"></div>
+                  <div class="tahap-meta" id="fotoInfo">Belum ada foto. Foto akan disimpan di Google Drive dan tautannya bisa diteruskan lewat WhatsApp.</div>
+                </div>
+              </div>
+
+              <div class="full">
+                <label>Isi Disposisi</label>
+                <textarea id="isiDisposisi" placeholder="Catatan disposisi awal (opsional)"></textarea>
+              </div>
+            </div>
+
+            <div style="margin-top:18px;">
+              <button type="submit" class="btn btn-primary" id="btnSimpanRegistrasi">💾 Simpan Registrasi</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============== TRACKING SURAT (dalam aplikasi) ============== -->
+      <div class="page" id="page-tracking">
+        <div class="card">
+          <h2>Tracking Surat</h2>
+          <div class="desc">Masukkan No Registrasi untuk melihat posisi dan riwayat persetujuan surat.</div>
+          <div class="search-row">
+            <input type="text" id="inputNoRegTracking" placeholder="Contoh: 001/SM/2026">
+            <button class="btn btn-primary" id="btnCariTracking">🔍 Cari</button>
+          </div>
+        </div>
+        <div id="hasilTracking"></div>
+      </div>
+
+      <!-- ============== UPDATE DISPOSISI (PIMPINAN / SUPER ADMIN) ============== -->
+      <div class="page" id="page-disposisi">
+        <div class="card">
+          <h2>Cari &amp; Proses Surat</h2>
+          <div class="desc">Masukkan No Registrasi secara manual, atau klik salah satu surat pada daftar "Menunggu Persetujuan Saya" di bawah.</div>
+          <div class="search-row">
+            <input type="text" id="inputNoRegDisposisi" placeholder="Contoh: 001/SM/2026">
+            <button class="btn btn-primary" id="btnCariDisposisi">🔍 Cari</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Menunggu Persetujuan Saya <span class="tahap-meta" id="jumlahKotakMasuk"></span></h2>
+          <div class="desc">Angka "hari" menunjukkan sudah berapa hari surat belum selesai sejak tanggal masuk. Klik salah satu untuk memproses.</div>
+          <div class="kotak-toolbar">
+            <div class="chip-pimpinan-bar" id="filterPimpinanKotak" style="display:none;"></div>
+            <div class="kotak-urut">
+              <label for="urutKotakMasuk">Urutkan</label>
+              <select id="urutKotakMasuk">
+                <option value="lama">Terlama dahulu</option>
+                <option value="baru">Terbaru dahulu</option>
+              </select>
+            </div>
+          </div>
+          <div id="kotakMasukSaya"><div class="empty-state">Memuat data...</div></div>
+        </div>
+      </div>
+
+      <!-- ============== DAFTAR SURAT MASUK (SEMUA DATA) ============== -->
+      <div class="page" id="page-semuasurat">
+        <div class="card">
+          <h2>Daftar Surat Masuk</h2>
+          <div class="desc">Menampilkan seluruh data surat masuk yang teregistrasi di sistem. Gunakan kolom pencarian untuk menyaring berdasarkan No Registrasi, perihal, pengirim, jenis, atau status. <strong>Klik salah satu baris</strong> untuk melihat tracking surat tersebut.</div>
+
+          <span class="filter-chip" id="filterStatusChip" style="display:none;">
+            Filter dari Dashboard: <strong class="chip-label"></strong>
+            <button type="button" id="btnHapusFilterStatus">&times;</button>
+          </span>
+
+          <div class="filter-row">
+            <div class="field" style="flex:1;min-width:220px;">
+              <label>Cari Cepat</label>
+              <input type="text" id="cariSemuaSurat" placeholder="Ketik No Registrasi, perihal, pengirim, jenis, atau status...">
+            </div>
+            <div class="field">
+              <label>Bulan</label>
+              <select id="filterBulanSemuaSurat">
+                <option value="">Semua Bulan</option>
+                <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tahun</label>
+              <select id="filterTahunSemuaSurat"><option value="">Semua Tahun</option></select>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-outline" id="btnRefreshSemuaSurat">🔄 Muat Ulang</button>
+            </div>
+            <div class="field" style="margin-left:auto;align-self:end;">
+              <span class="tahap-meta" id="jumlahSemuaSurat"></span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="tabelSemuaSurat">
+              <thead>
+                <tr>
+                  <th>No Registrasi</th><th>Tanggal</th><th>Dari</th><th>No Surat</th>
+                  <th>Perihal</th><th>Jenis</th><th>Tujuan</th><th>Status</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="9" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== SURAT SELESAI ============== -->
+      <div class="page" id="page-suratselesai">
+        <div class="card">
+          <h2>Surat Selesai</h2>
+          <div class="desc">Surat yang seluruh tahapnya sudah disetujui, atau surat informasi yang perlu diambil pemohon. Surat berjenis Undangan tidak ditampilkan di sini karena tidak diambil kembali oleh pengirim. Menampilkan tanggal selesai dan status pengambilan surat.</div>
+
+          <div class="filter-row">
+            <div class="field" style="flex:1;min-width:220px;">
+              <label>Cari Cepat</label>
+              <input type="text" id="cariSuratSelesai" placeholder="Ketik No Registrasi, perihal, atau nama penerima...">
+            </div>
+            <div class="field">
+              <label>Bulan</label>
+              <select id="filterBulanSuratSelesai">
+                <option value="">Semua Bulan</option>
+                <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tahun</label>
+              <select id="filterTahunSuratSelesai"><option value="">Semua Tahun</option></select>
+            </div>
+            <div class="field">
+              <label>Pengambilan</label>
+              <select id="filterPengambilanSuratSelesai">
+                <option value="">Semua</option>
+                <option value="belum">Belum Diambil</option>
+                <option value="sudah">Sudah Diambil</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-outline" id="btnRefreshSuratSelesai">🔄 Muat Ulang</button>
+            </div>
+            <div class="field" style="margin-left:auto;align-self:end;">
+              <span class="tahap-meta" id="jumlahSuratSelesai"></span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="tabelSuratSelesai">
+              <thead>
+                <tr>
+                  <th>No Registrasi</th><th>Perihal</th><th>Jenis</th><th>Status</th>
+                  <th>Tanggal Selesai</th><th>Pengambilan</th><th>Nama Penerima</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="8" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== PENGATURAN (Admin TU) ============== -->
+      <div class="page" id="page-pengaturan">
+        <div class="card">
+          <h2>⚙️ Pengaturan</h2>
+          <div class="desc">Satu nomor WhatsApp aplikasi untuk semua akun. Bila pengiriman otomatis diaktifkan, pesan ke pemohon (registrasi, persetujuan, status, pengingat ambil surat) terkirim otomatis dari nomor ini tanpa membuka WhatsApp petugas. Nomor ditautkan lewat server WhatsApp sendiri (scan QR di halaman ini) atau gateway pihak ketiga. Kunci/token disimpan di server dan tidak ditampilkan kembali.</div>
+
+          <form id="formPengaturanWa" style="max-width:580px;">
+            <div class="field-block">
+              <label for="inputNoWaApp">No WhatsApp Aplikasi</label>
+              <input type="text" id="inputNoWaApp" placeholder="Contoh: 081234567890" inputmode="tel" autocomplete="off">
+              <div class="tahap-meta" style="margin-top:6px;">Nomor kantor yang menjadi pengirim. Dicantumkan juga sebagai Kontak Tata Usaha pada pesan.</div>
+            </div>
+
+            <div class="field-block">
+              <label for="selProviderWa">Metode pengiriman otomatis</label>
+              <select id="selProviderWa">
+                <option value="server">Server WhatsApp sendiri (scan QR di sini)</option>
+                <option value="fonnte">Gateway pihak ketiga (Fonnte, pakai token)</option>
+              </select>
+            </div>
+
+            <div id="blokServerWa">
+              <div class="field-block">
+                <label for="inputSrvUrl">Alamat Server</label>
+                <input type="text" id="inputSrvUrl" placeholder="https://wa.instansi.go.id" autocomplete="off">
+              </div>
+              <div class="field-block">
+                <label for="inputSrvKey">API Key Server</label>
+                <input type="password" id="inputSrvKey" placeholder="Sama dengan API_KEY di file .env server" autocomplete="new-password">
+                <div class="tahap-meta" id="infoSrvKey" style="margin-top:6px;"></div>
+              </div>
+
+              <div class="card" style="background:#f8fafc;box-shadow:none;margin:0 0 16px;padding:14px 16px;">
+                <h2 style="font-size:14px;">Tautan Nomor WhatsApp</h2>
+                <div id="waSrvStatus" class="tahap-meta" style="font-size:13px;">Isi alamat server & API key, lalu Simpan.</div>
+                <div id="waSrvQrBox" style="display:none;text-align:center;margin:12px 0 4px;">
+                  <img id="waSrvQr" alt="QR Code tautan WhatsApp" style="width:240px;height:240px;border:1px solid #dde4ee;border-radius:10px;padding:6px;background:#fff;">
+                  <div style="font-size:12.5px;color:#5b6b80;margin-top:6px;line-height:1.5;">Di HP pemegang nomor kantor: WhatsApp &rarr; <b>Perangkat tertaut</b> &rarr; <b>Tautkan perangkat</b> &rarr; scan kode ini.</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                  <button type="button" class="btn btn-outline btn-sm" id="btnCekStatusSrv">🔄 Cek Status</button>
+                  <button type="button" class="btn btn-outline btn-sm" id="btnPutusSrv">Putuskan Nomor</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="blokFonnteWa" style="display:none;">
+              <div class="field-block">
+                <label for="inputGwToken">Token Gateway WhatsApp (mis. Fonnte)</label>
+                <input type="password" id="inputGwToken" placeholder="Tempel token dari akun gateway" autocomplete="new-password">
+                <div class="tahap-meta" id="infoGwToken" style="margin-top:6px;"></div>
+              </div>
+            </div>
+
+            <label class="checkbox-item" style="margin:4px 0 16px;"><input type="checkbox" id="chkGwAktif"> Aktifkan pengiriman otomatis dari nomor aplikasi</label>
+            <div class="tahap-meta" id="infoNoWaApp" style="margin-bottom:14px;"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button type="submit" class="btn btn-primary" id="btnSimpanNoWaApp">💾 Simpan</button>
+              <button type="button" class="btn btn-outline" id="btnHapusNoWaApp">Hapus Kredensial &amp; Nonaktifkan</button>
+            </div>
+
+            <div class="card" style="background:#f8fafc;box-shadow:none;margin:20px 0 0;padding:14px 16px;">
+              <h2 style="font-size:14px;">Kirim Pesan Uji</h2>
+              <div class="field-block" style="margin-bottom:10px;">
+                <input type="text" id="inputNoWaUji" placeholder="No WhatsApp tujuan uji, mis. 081234567890" inputmode="tel" autocomplete="off">
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" id="btnKirimWaUji">📨 Kirim Pesan Uji</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============== RECYCLE BIN (Admin TU) ============== -->
+      <div class="page" id="page-recyclebin">
+        <div class="card">
+          <h2>🗑️ Recycle Bin</h2>
+          <div class="desc">Surat yang dihapus dari Daftar Surat Masuk disimpan di sini lengkap dengan <strong>akun yang menghapus</strong> dan waktunya. Tracking surat yang dihapus tidak bisa dibuka lagi sampai surat <strong>dipulihkan</strong>. Nomor registrasi surat yang dihapus tidak dipakai ulang.</div>
+
+          <div class="filter-row">
+            <div class="field" style="flex:1;min-width:220px;">
+              <label>Cari Cepat</label>
+              <input type="text" id="cariRecycle" placeholder="Ketik No Registrasi, perihal, pengirim, atau nama penghapus...">
+            </div>
+            <div class="field">
+              <label>Status</label>
+              <select id="filterStatusRecycle">
+                <option value="">Semua</option>
+                <option value="Terhapus">Terhapus</option>
+                <option value="Dipulihkan">Dipulihkan</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-outline" id="btnRefreshRecycle">🔄 Muat Ulang</button>
+            </div>
+            <div class="field" style="margin-left:auto;align-self:end;">
+              <span class="tahap-meta" id="jumlahRecycle"></span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="tabelRecycle">
+              <thead>
+                <tr>
+                  <th>No Registrasi</th><th>Surat</th><th>Jenis</th><th>Status Terakhir</th>
+                  <th>Dihapus Oleh</th><th>Waktu Hapus</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="7" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== LAPORAN HARIAN & BULANAN ============== -->
+      <div class="page" id="page-laporan">
+        <!-- Menu Laporan berupa dropdown (Harian / Bulanan): hanya satu kartu yang tampil sekaligus. -->
+        <div class="card" id="cardLaporanHarian">
+          <h2>Laporan Harian</h2>
+          <div class="desc">Ringkasan aktivitas persuratan hari ini.</div>
+          <div class="stats-grid" id="statsHarian">
+            <div class="stat-box"><div class="num">-</div><div class="label">Surat Masuk Hari Ini</div></div>
+            <div class="stat-box green"><div class="num">-</div><div class="label">Selesai Hari Ini</div></div>
+            <div class="stat-box amber"><div class="num">-</div><div class="label">Masih Dalam Proses</div></div>
+          </div>
+          <div class="table-wrap">
+            <table id="tabelMasihProses">
+              <thead><tr><th>No Registrasi</th><th>Perihal</th><th>Jenis</th><th>Menunggu</th></tr></thead>
+              <tbody><tr><td colspan="4" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+          <div style="margin-top:14px;">
+            <button class="btn btn-gold" id="btnExportHarianPdf">📄 Export PDF Laporan Harian</button>
+          </div>
+        </div>
+
+        <div class="card laporan-sembunyi" id="cardLaporanBulanan">
+          <h2>Laporan Bulanan / Filter</h2>
+          <div class="desc">Filter berdasarkan bulan, tahun, dan jenis surat, lalu ekspor ke PDF atau Excel.</div>
+
+          <div class="filter-row">
+            <div class="field">
+              <label>Bulan</label>
+              <select id="filterBulan">
+                <option value="">Semua Bulan</option>
+                <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tahun</label>
+              <select id="filterTahun"></select>
+            </div>
+            <div class="field">
+              <label>Jenis Surat</label>
+              <select id="filterJenis"><option value="">Semua Jenis</option></select>
+            </div>
+            <div class="field">
+              <button class="btn btn-outline" id="btnTerapkanFilter">Terapkan Filter</button>
+            </div>
+            <div class="field" style="margin-left:auto;display:flex;gap:8px;">
+              <button class="btn btn-gold" id="btnExportPdf">📄 Export PDF</button>
+              <button class="btn btn-gold" id="btnExportExcel">📊 Export Excel</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="tabelDaftar">
+              <thead>
+                <tr>
+                  <th>No Registrasi</th><th>Tanggal</th><th>Dari</th><th>No Surat</th>
+                  <th>Perihal</th><th>Jenis</th><th>Tujuan</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody><tr><td colspan="8" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- =========================================================
+       POP UP PROSES PERSETUJUAN (surat dari "Menunggu Persetujuan Saya" / pencarian No Registrasi)
+       Catatan: elemen #hasilDisposisi dipindah ke sini; app.js tetap mengisinya seperti biasa.
+  ========================================================== -->
+  <div class="login-modal-overlay" id="disposisiPopupOverlay">
+    <div class="login-modal disposisi-modal" role="dialog" aria-modal="true" aria-labelledby="disposisiPopupJudul">
+      <div class="disposisi-modal-header">
+        <div>
+          <h2 id="disposisiPopupJudul">📝 Proses Persetujuan Surat</h2>
+          <div class="sub" id="disposisiPopupNoReg"></div>
+        </div>
+        <button class="modal-close" id="btnTutupDisposisiPopup" type="button" aria-label="Tutup">&times;</button>
+      </div>
+      <div id="hasilDisposisi" class="disposisi-body"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       POP UP TRACKING SURAT (dibuka dengan klik baris di Daftar Surat Masuk)
+  ========================================================== -->
+  <div class="login-modal-overlay" id="trackingPopupOverlay">
+    <div class="login-modal">
+      <div class="login-modal-header">
+        <h2>🔍 Tracking Surat <span id="trackingPopupNoReg" style="color:var(--muted);font-weight:600;"></span></h2>
+        <button class="modal-close" id="btnTutupTrackingPopup" type="button">&times;</button>
+      </div>
+      <div id="trackingPopupBody" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <script src="../config.js"></script>
+  <script src="../gas-api.js?v=20261007"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="../app.js?v=20261124"></script>
+  <script>
+    // Tracking langsung dari tautan WhatsApp: ?noreg=001%2FSM%2F2026
+    (function () {
+      try {
+        var noreg = (new URLSearchParams(window.location.search).get('noreg') || '').trim();
+        if (!noreg) return;
+        var jalankan = function () {
+          var inp = document.getElementById('inputNoRegLanding');
+          var btn = document.getElementById('btnCariLanding');
+          if (!inp || !btn) return;
+          inp.value = noreg;
+          btn.click();
+          setTimeout(function () {
+            var hasil = document.getElementById('hasilTrackingLanding');
+            if (hasil && hasil.scrollIntoView) hasil.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 600);
+        };
+        if (document.readyState === 'complete') setTimeout(jalankan, 100);
+        else window.addEventListener('load', function () { setTimeout(jalankan, 100); });
+      } catch (e) { /* abaikan */ }
+    })();
+  </script>
+    <script>
+    // Pop up Proses Persetujuan: setiap kali app.js mengisi #hasilDisposisi, tampilkan sebagai pop up.
+    (function () {
+      var hasil = document.getElementById('hasilDisposisi');
+      var overlay = document.getElementById('disposisiPopupOverlay');
+      var lbl = document.getElementById('disposisiPopupNoReg');
+      var input = document.getElementById('inputNoRegDisposisi');
+      if (!hasil || !overlay) return;
+
+      function sinkron() {
+        var kosong = !hasil.children.length && !hasil.textContent.trim();
+        if (kosong) {
+          overlay.classList.remove('show');
+          document.body.classList.remove('disposisi-terbuka');
+        } else {
+          if (!overlay.classList.contains('show')) hasil.scrollTop = 0;
+          overlay.classList.add('show');
+          document.body.classList.add('disposisi-terbuka');
+          lbl.textContent = input && input.value ? 'No. Registrasi ' + input.value.trim() : '';
+        }
+      }
+
+      function tutup() { hasil.innerHTML = ''; sinkron(); }
+
+      new MutationObserver(sinkron).observe(hasil, { childList: true, subtree: true, characterData: true });
+      document.getElementById('btnTutupDisposisiPopup').addEventListener('click', tutup);
+      // Klik latar gelap SENGAJA tidak menutup, agar catatan yang sedang diketik tidak hilang tak sengaja.
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape' || !overlay.classList.contains('show')) return;
+        var a = document.activeElement;
+        if (a && /^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)) return; // jangan tutup saat sedang mengetik
+        // jangan tutup bila modal lain (konfirmasi, notifikasi WA) sedang tampil di atasnya
+        if (document.querySelector('#notifWaModalOverlay.show, #skipConfirmModalOverlay.show')) return;
+        tutup();
+      });
+    })();
+  </script>
+  <script>
+    // Pop up tracking: klik baris pada Daftar Surat Masuk -> tampilkan hasil tracking surat tsb.
+    (function () {
+      var tabel = document.getElementById('tabelSemuaSurat');
+      var overlay = document.getElementById('trackingPopupOverlay');
+      var body = document.getElementById('trackingPopupBody');
+      var lbl = document.getElementById('trackingPopupNoReg');
+      var proxyInput = document.getElementById('inputNoRegTracking');
+      var proxyBtn = document.getElementById('btnCariTracking');
+      var proxyHasil = document.getElementById('hasilTracking');
+      if (!tabel || !overlay || !proxyInput || !proxyBtn || !proxyHasil) return;
+
+      var observer = null, debounce = null, timeout = null, token = 0;
+
+      function tutup() {
+        overlay.classList.remove('show');
+        if (observer) { observer.disconnect(); observer = null; }
+        clearTimeout(debounce); clearTimeout(timeout);
+        token++;
+      }
+
+      function tandaiBaris() {
+        var rows = tabel.querySelectorAll('tbody tr');
+        for (var i = 0; i < rows.length; i++) {
+          var tds = rows[i].children;
+          if (tds.length < 3) { rows[i].classList.add('row-kosong'); continue; }
+          if (!rows[i].hasAttribute('data-noreg')) {
+            var no = (tds[0].textContent || '').trim();
+            if (no) { rows[i].setAttribute('data-noreg', no); rows[i].title = 'Klik untuk melihat tracking surat ini'; }
+          }
+          // Batasi teks panjang (Dari, Perihal, Tujuan) agar tinggi semua baris seragam;
+          // teks lengkap tetap tampil saat kursor diarahkan (tooltip) dan di pop up tracking.
+          if (tds.length >= 7) {
+            [2, 4, 6].forEach(function (k) {
+              var td = tds[k];
+              if (td.firstElementChild && td.firstElementChild.classList.contains('sel-clamp')) return;
+              var teks = (td.textContent || '').trim();
+              if (!teks) return;
+              var d = document.createElement('div');
+              d.className = 'sel-clamp';
+              d.title = teks;
+              while (td.firstChild) d.appendChild(td.firstChild);
+              td.appendChild(d);
+            });
+          }
+        }
+      }
+
+      function esc(t) { return String(t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+      function teksSel(td) {
+        if (!td) return '';
+        var c = td.querySelector('.sel-clamp');
+        return ((c && c.title) || td.textContent || '').trim();
+      }
+
+      // Kepala pop up langsung tampil dari data yang sudah ada di baris tabel (tanpa menunggu server);
+      // riwayat & alur persetujuan menyusul begitu data tiba.
+      function kepalaInstan(tr) {
+        var t = tr.children;
+        if (t.length < 8) return '<div class="empty-state">Memuat tracking surat...</div>';
+        var perihal = teksSel(t[4]), dari = teksSel(t[2]), tujuan = teksSel(t[6]);
+        return '<div class="no-reg-result">' +
+          '<div class="no">' + esc(t[0].textContent.trim()) + '</div>' +
+          (perihal ? '<div class="perihal">' + esc(perihal) + '</div>' : '') +
+          '<div class="field-row">' +
+            '<span class="item"><strong>Jenis:</strong> ' + esc(t[5].textContent.trim()) + '</span>' +
+            '<span class="item"><strong>Dari:</strong> ' + esc(dari) + '</span>' +
+            '<span class="item"><strong>Tanggal Masuk:</strong> ' + esc(t[1].textContent.trim()) + '</span>' +
+            '<span class="item"><strong>Tujuan:</strong> ' + esc(tujuan) + '</span>' +
+          '</div></div>' +
+          '<div class="empty-state">Memuat riwayat &amp; alur persetujuan...</div>';
+      }
+
+      // Muat data tracking lebih awal begitu kursor berhenti di atas sebuah baris (hasil masuk cache),
+      // sehingga saat baris diklik pop up langsung terisi.
+      var tundaPrefetch = null, sudahPrefetch = {};
+      function prefetch(tr) {
+        if (!tr || tr.children.length < 3) return;
+        var noReg = (tr.getAttribute('data-noreg') || '').trim();
+        if (!noReg || sudahPrefetch[noReg]) return;
+        sudahPrefetch[noReg] = true;
+        setTimeout(function () { delete sudahPrefetch[noReg]; }, 60000);
+        try {
+          google.script.run.withSilentErrors()
+            .withSuccessHandler(function () {}).withFailureHandler(function () {})
+            .getTrackingByNoRegistrasi(noReg);
+        } catch (e) { /* abaikan */ }
+      }
+      function jadwalkanPrefetch(e) {
+        var tr = e.target.closest ? e.target.closest('tbody tr') : null;
+        clearTimeout(tundaPrefetch);
+        if (!tr) return;
+        tundaPrefetch = setTimeout(function () { prefetch(tr); }, 120);
+      }
+      tabel.addEventListener('mouseover', jadwalkanPrefetch);
+      tabel.addEventListener('touchstart', function (e) {
+        var tr = e.target.closest ? e.target.closest('tbody tr') : null;
+        prefetch(tr);
+      }, { passive: true });
+
+      function buka(noReg, tr) {
+        var myToken = ++token;
+        lbl.textContent = noReg;
+        body.innerHTML = tr ? kepalaInstan(tr) : '<div class="empty-state">Memuat tracking surat...</div>';
+        overlay.classList.add('show');
+
+        if (observer) observer.disconnect();
+        clearTimeout(debounce); clearTimeout(timeout);
+        proxyHasil.innerHTML = '';
+
+        // Cermin langsung: setiap kali hasil tracking berubah (dari "Mencari data..." sampai
+        // hasil akhir tiba dari server), isi pop up ikut diperbarui.
+        var salin = function () {
+          if (myToken !== token) return;
+          var isi = proxyHasil.innerHTML.trim();
+          if (!isi) return;
+          // "Mencari data..." hanya penanda sementara: biarkan kepala instan tetap tampil sampai hasil asli tiba.
+          if (/^<div class="empty-state">Mencari data/i.test(isi) && body.querySelector('.no-reg-result')) return;
+          body.innerHTML = isi;
+        };
+
+        observer = new MutationObserver(salin);
+        observer.observe(proxyHasil, { childList: true, subtree: true, characterData: true });
+        timeout = setTimeout(function () {
+          if (myToken !== token) return;
+          if (/Mencari data/i.test(body.textContent)) {
+            body.innerHTML = '<div class="empty-state">Server belum merespons. Tutup lalu klik baris ini lagi.</div>';
+          }
+        }, 30000);
+
+        proxyInput.value = noReg;
+        proxyBtn.click();
+      }
+
+      tabel.addEventListener('click', function (e) {
+        if (e.target.closest('button, a, input, select, textarea, label')) return; // kolom Aksi tetap berfungsi
+        var tr = e.target.closest('tr');
+        if (!tr || !tabel.contains(tr) || tr.parentNode.tagName !== 'TBODY') return;
+        if (tr.children.length < 3) return; // baris "Memuat data..." / kosong
+        var noReg = (tr.getAttribute('data-noreg') || tr.children[0].textContent || '').trim();
+        if (noReg) buka(noReg, tr);
+      });
+
+      // Mode aman: buka halaman dengan ?safe=1 untuk mematikan perapian baris (uji pembanding).
+      var modeAman = /[?&]safe=1/.test(window.location.search);
+      var tundaTandai = null;
+      var tandaiAman = function () {
+        if (modeAman) return;
+        clearTimeout(tundaTandai);
+        // ditunda sebentar agar tidak mengganggu proses render tabel oleh app.js
+        tundaTandai = setTimeout(function () { try { tandaiBaris(); } catch (err) { /* abaikan */ } }, 150);
+      };
+      new MutationObserver(tandaiAman).observe(tabel, { childList: true, subtree: true });
+      tandaiAman();
+
+      document.getElementById('btnTutupTrackingPopup').addEventListener('click', tutup);
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) tutup(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.classList.contains('show')) tutup(); });
+    })();
+  </script>
+  <nav class="bottom-nav" id="bottomNav" style="display:none;"></nav>
+  <script src="android.js?v=1"></script>
+</body>
+</html>
