@@ -1,4 +1,4 @@
-/* SPARTA Android (versi web) - tambahan kecil di atas app.js: tombol lihat password & menu bawah. */
+/* SPARTA Android (versi web) - tambahan di atas app.js: lihat password, menu bawah gaya kaca, widget sapaan. */
 (function () {
   'use strict';
 
@@ -14,43 +14,49 @@
     });
   }
 
-  /* ---- Menu bawah (bottom navigation): cerminan dari menu samping yang dibuat app.js sesuai role ---- */
-  var PRIORITAS = ['dashboard', 'disposisi', 'registrasi', 'semuasurat', 'tracking', 'suratselesai'];
   var navAsli = document.getElementById('navTabs');
   var bar = document.getElementById('bottomNav');
   var appPage = document.getElementById('appPage');
   if (!navAsli || !bar || !appPage) return;
 
-  function pecahLabel(teks) {               // "📊 Dashboard" -> ["📊", "Dashboard"]
-    var t = (teks || '').trim();
-    var m = /^(\S+)\s+(.*)$/.exec(t);
-    return m ? [m[1], m[2]] : ['•', t];
+  /* ---- Ikon garis (SVG) untuk menu bawah ---- */
+  function svg(isi) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + isi + '</svg>';
   }
+  var IKON = {
+    dashboard:    svg('<rect x="3.5" y="3.5" width="7" height="8.5" rx="2"/><rect x="13.5" y="3.5" width="7" height="5" rx="2"/><rect x="13.5" y="11.5" width="7" height="9" rx="2"/><rect x="3.5" y="15" width="7" height="5.5" rx="2"/>'),
+    registrasi:   svg('<path d="M14 3.5H7.5A2 2 0 0 0 5.5 5.5v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3.5V8h4.5"/><path d="M12 11.5v5M9.5 14h5"/>'),
+    semuasurat:   svg('<path d="M3.5 13.5l2.4-7.2A2 2 0 0 1 7.8 5h8.4a2 2 0 0 1 1.9 1.3l2.4 7.2"/><path d="M3.5 13.5V17a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-3.5h-5l-1.2 2h-5.6l-1.2-2z"/>'),
+    suratselesai: svg('<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.4l2.7 2.7 4.8-5.2"/>'),
+    disposisi:    svg('<rect x="5" y="4.5" width="14" height="16" rx="2.5"/><path d="M9 4.5V3.5h6v1"/><path d="M9 12.5l2 2 4-4.2"/>'),
+    keluar:       svg('<path d="M9.5 20.5h-4a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2h4"/><path d="M15.5 16.5L20 12l-4.5-4.5"/><path d="M20 12H9.5"/>')
+  };
+
+  /* ---- Menu bawah: Dashboard, Registrasi, Surat Masuk, Selesai, Keluar ---- */
+  var URUTAN = [
+    { p: 'dashboard',    teks: 'Dashboard' },
+    { p: 'registrasi',   teks: 'Registrasi' },
+    { p: 'semuasurat',   teks: 'Surat Masuk' },
+    { p: 'suratselesai', teks: 'Selesai' }
+  ];
+
+  function item(p) { return navAsli.querySelector('.nav-item[data-page="' + p + '"]'); }
 
   function bangunBar() {
-    var item = {};
-    navAsli.querySelectorAll('.nav-item[data-page]').forEach(function (el) {
-      if (!el.classList.contains('has-sub')) item[el.dataset.page] = el;
-    });
-    var terpilih = PRIORITAS.filter(function (p) { return item[p]; }).slice(0, 4);
-    if (!terpilih.length) { bar.innerHTML = ''; return; }
-
     var html = '';
-    terpilih.forEach(function (p) {
-      var l = pecahLabel(item[p].textContent);
-      var pendek = l[1].replace('Menunggu Persetujuan', 'Persetujuan').replace('Daftar Surat Masuk', 'Surat')
-                       .replace('Registrasi Surat', 'Registrasi').replace('Tracking Surat', 'Tracking');
-      html += '<button type="button" class="bn-item" data-page="' + p + '"><span class="bn-ikon">' + l[0] + '</span><span class="bn-teks">' + pendek + '</span></button>';
+    URUTAN.forEach(function (u) {
+      if (!item(u.p)) return;
+      html += '<button type="button" class="bn-item" data-page="' + u.p + '"><span class="bn-ikon">' + IKON[u.p] + '</span><span class="bn-teks">' + u.teks + '</span></button>';
     });
-    html += '<button type="button" class="bn-item" data-menu="1"><span class="bn-ikon">☰</span><span class="bn-teks">Menu</span></button>';
+    html += '<button type="button" class="bn-item bn-keluar" data-keluar="1"><span class="bn-ikon">' + IKON.keluar + '</span><span class="bn-teks">Keluar</span></button>';
     bar.innerHTML = html;
 
     bar.querySelectorAll('.bn-item[data-page]').forEach(function (b) {
-      b.addEventListener('click', function () { item[b.dataset.page].click(); window.scrollTo({ top: 0 }); });
+      b.addEventListener('click', function () { var t = item(b.dataset.page); if (t) t.click(); window.scrollTo({ top: 0 }); });
     });
-    bar.querySelector('[data-menu]').addEventListener('click', function () {
-      var t = document.getElementById('btnToggleSidebar');
-      if (t) t.click();
+    bar.querySelector('[data-keluar]').addEventListener('click', function () {
+      var k = document.getElementById('btnKembaliLanding');
+      if (k) k.click();
     });
     sinkronAktif();
   }
@@ -58,9 +64,7 @@
   function sinkronAktif() {
     var aktif = navAsli.querySelector('.nav-item.active');
     var p = aktif ? aktif.dataset.page : '';
-    bar.querySelectorAll('.bn-item[data-page]').forEach(function (b) {
-      b.classList.toggle('aktif', b.dataset.page === p);
-    });
+    bar.querySelectorAll('.bn-item[data-page]').forEach(function (b) { b.classList.toggle('aktif', b.dataset.page === p); });
   }
 
   function tampilkanBarBila() {
@@ -71,21 +75,14 @@
   }
 
   new MutationObserver(function (m) {
-    // daftar menu dibuat ulang (login) -> bangun menu bawah; hanya kelas berubah -> sinkron aktif
-    var dibuatUlang = m.some(function (x) { return x.type === 'childList'; });
-    if (dibuatUlang) bangunBar(); else sinkronAktif();
+    if (m.some(function (x) { return x.type === 'childList'; })) bangunBar(); else sinkronAktif();
   }).observe(navAsli, { childList: true, attributes: true, attributeFilter: ['class'], subtree: true });
-
   new MutationObserver(tampilkanBarBila).observe(appPage, { attributes: true, attributeFilter: ['style'] });
   tampilkanBarBila();
-})();
 
-/* ---------- Dashboard gaya widget: widget sapaan di bagian atas ---------- */
-(function () {
-  'use strict';
+  /* ---------- Dashboard: widget sapaan (ringkas) ---------- */
   var halaman = document.getElementById('page-dashboard');
   var grid = document.getElementById('statsGrid');
-  var navAsli = document.getElementById('navTabs');
   if (!halaman || !grid) return;
 
   var hero = document.createElement('div');
@@ -95,11 +92,16 @@
     '<div class="w-hero-atas"><div><div class="w-sapa" id="wSapa">Halo</div><div class="w-nama" id="wNama">-</div></div>' +
     '<div class="w-avatar" id="wAvatar">-</div></div>' +
     '<div class="w-meta"><span id="wRole"></span><span id="wTanggal"></span></div>' +
-    '<div class="w-ringkas" id="wRingkas" style="display:none;"></div>' +
-    '<div class="w-aksi" id="wAksi"></div>';
+    '<button type="button" class="w-ringkas" id="wRingkas" style="display:none;"></button>';
   halaman.insertBefore(hero, halaman.firstChild);
 
   function teks(id) { var e = document.getElementById(id); return e ? e.textContent.trim() : ''; }
+
+  function bukaPersetujuan() {
+    var t = item('disposisi');
+    if (t) { t.click(); window.scrollTo({ top: 0 }); }
+  }
+  document.getElementById('wRingkas').addEventListener('click', bukaPersetujuan);
 
   function perbarui() {
     var jam = new Date().getHours();
@@ -113,36 +115,15 @@
       document.getElementById('wTanggal').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
     } catch (e) { /* abaikan */ }
 
-    // Ringkasan: angka pada papan berwarna amber (Menunggu Persetujuan / Dalam Proses)
+    // Pintasan ke "Menunggu Persetujuan" (menu ini tidak ada di menu bawah)
     var amber = grid.querySelector('.stat-box.amber .num');
-    var label = grid.querySelector('.stat-box.amber .label');
     var r = document.getElementById('wRingkas');
-    if (amber && /^\d+$/.test(amber.textContent.trim())) {
+    if (amber && /^\d+$/.test(amber.textContent.trim()) && item('disposisi')) {
       r.style.display = '';
-      r.innerHTML = '<b>' + amber.textContent.trim() + '</b> surat ' + (label ? label.textContent.trim().toLowerCase() : 'dalam proses');
+      r.innerHTML = '✅ <b>' + amber.textContent.trim() + '</b> surat menunggu persetujuan <span class="w-panah">›</span>';
     }
   }
-
-  function aksiCepat() {
-    var wadah = document.getElementById('wAksi');
-    var daftar = [['registrasi', '📝', 'Registrasi'], ['disposisi', '✅', 'Persetujuan'], ['tracking', '🔎', 'Tracking']];
-    var html = '';
-    daftar.forEach(function (d) {
-      if (navAsli && navAsli.querySelector('.nav-item[data-page="' + d[0] + '"]')) {
-        html += '<button type="button" class="w-aksi-btn" data-ke="' + d[0] + '"><span>' + d[1] + '</span>' + d[2] + '</button>';
-      }
-    });
-    wadah.innerHTML = html;
-    wadah.querySelectorAll('.w-aksi-btn').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var t = navAsli.querySelector('.nav-item[data-page="' + b.dataset.ke + '"]');
-        if (t) t.click();
-        window.scrollTo({ top: 0 });
-      });
-    });
-  }
-
   new MutationObserver(perbarui).observe(grid, { childList: true, subtree: true, characterData: true });
-  if (navAsli) new MutationObserver(function () { perbarui(); aksiCepat(); }).observe(navAsli, { childList: true });
-  perbarui(); aksiCepat();
+  new MutationObserver(perbarui).observe(navAsli, { childList: true });
+  perbarui();
 })();
