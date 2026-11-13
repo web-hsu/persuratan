@@ -134,7 +134,7 @@
             <div class="card" style="background:#f8fafc;box-shadow:none;margin-bottom:0;">
               <h2 style="font-size:14px;">Detail Undangan</h2>
               <div class="form-grid">
-                <div><label>Tanggal Acara</label><input type="date" id="editTanggalAcara"></div>
+                <div><label>Tanggal Acara</label><input type="text" id="editTanggalAcara" class="input-tgl-dmy" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" autocomplete="off"></div>
                 <div><label>Waktu</label><div style="display:flex;gap:8px;"><input type="time" id="editWaktuAcara" style="flex:1;min-width:0;"><select id="editZonaAcara" style="flex:0 0 96px;" aria-label="Zona waktu"><option value="WIB">WIB</option><option value="WITA" selected>WITA</option><option value="WIT">WIT</option></select></div></div>
                 <div><label>Tempat</label><input type="text" id="editTempatAcara"></div>
                 <div><label>Keterangan</label><input type="text" id="editKeteranganAcara"></div>
@@ -412,7 +412,7 @@
                 <div class="card" style="background:#f8fafc;box-shadow:none;margin-bottom:0;">
                   <h2 style="font-size:14px;">Detail Undangan</h2>
                   <div class="form-grid">
-                    <div><label>Tanggal Acara</label><input type="date" id="tanggalAcara"></div>
+                    <div><label>Tanggal Acara</label><input type="text" id="tanggalAcara" class="input-tgl-dmy" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" autocomplete="off"></div>
                     <div><label>Waktu</label><div style="display:flex;gap:8px;"><input type="time" id="waktuAcara" style="flex:1;min-width:0;"><select id="zonaAcara" style="flex:0 0 96px;" aria-label="Zona waktu"><option value="WIB">WIB</option><option value="WITA" selected>WITA</option><option value="WIT">WIT</option></select></div></div>
                     <div><label>Tempat</label><input type="text" id="tempatAcara" placeholder="Lokasi acara"></div>
                     <div><label>Keterangan</label><input type="text" id="keteranganAcara" placeholder="Catatan tambahan"></div>
@@ -818,7 +818,7 @@
   <script src="config.js"></script>
   <script src="gas-api.js?v=20261007"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="app.js?v=20261120"></script>
+  <script src="app.js?v=20261124"></script>
   <script>
     // Tracking langsung dari tautan WhatsApp: ?noreg=001%2FSM%2F2026
     (function () {

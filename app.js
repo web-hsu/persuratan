@@ -535,7 +535,12 @@ console.info('[SPARTA] app.js versi 20261117 termuat');
       }
 
       if (jenis === 'Undangan') {
-        form.tanggalAcara = document.getElementById('tanggalAcara').value;
+        var tglAcaraTxt = document.getElementById('tanggalAcara').value.trim();
+        form.tanggalAcara = tglKeISO(tglAcaraTxt);
+        if (tglAcaraTxt && !form.tanggalAcara) {
+          showToast('Format Tanggal Acara harus dd/mm/yyyy (contoh 25/11/2026).', 'error');
+          return;
+        }
         var wktBaru = document.getElementById('waktuAcara').value;
         form.waktuAcara = wktBaru ? wktBaru + ' ' + document.getElementById('zonaAcara').value : '';
         form.tempatAcara = document.getElementById('tempatAcara').value;
@@ -650,7 +655,7 @@ console.info('[SPARTA] app.js versi 20261117 termuat');
       html += '<div class="card">';
       html += '  <h2>Detail Undangan</h2>';
       html += '  <div class="field-row">';
-      html += '    <span class="item"><strong>Tanggal:</strong> ' + (res.undangan.tanggalAcara || '-') + '</span>';
+      html += '    <span class="item"><strong>Tanggal:</strong> ' + (tglKeDMY(res.undangan.tanggalAcara) || '-') + '</span>';
       html += '    <span class="item"><strong>Waktu:</strong> ' + (res.undangan.waktu || '-') + '</span>';
       html += '    <span class="item"><strong>Tempat:</strong> ' + (res.undangan.tempat || '-') + '</span>';
       html += '    <span class="item"><strong>Keterangan:</strong> ' + (res.undangan.keterangan || '-') + '</span>';
@@ -1517,6 +1522,32 @@ console.info('[SPARTA] app.js versi 20261117 termuat');
 
 
   /* ---------- Animasi Dashboard: angka berjalan naik, batang & donat tumbuh setiap menu Dashboard dibuka ---------- */
+
+  /* ---------- Tanggal Acara: tampil & diketik sebagai dd/mm/yyyy, dikirim ke server sebagai yyyy-mm-dd ---------- */
+  function tglKeDMY(v) {
+    if (!v) return '';
+    var s = String(v).trim(), m;
+    if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s))) return ('0' + m[3]).slice(-2) + '/' + ('0' + m[2]).slice(-2) + '/' + m[1];
+    if ((m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s))) return ('0' + m[1]).slice(-2) + '/' + ('0' + m[2]).slice(-2) + '/' + m[3];
+    return s;
+  }
+  function tglKeISO(v) {
+    var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(v || '').trim());
+    if (!m) return '';
+    var h = +m[1], b = +m[2], t = +m[3];
+    var d = new Date(t, b - 1, h);
+    if (d.getFullYear() !== t || d.getMonth() !== b - 1 || d.getDate() !== h) return '';
+    return t + '-' + ('0' + b).slice(-2) + '-' + ('0' + h).slice(-2);
+  }
+  document.addEventListener('input', function (e) {
+    var el = e.target;
+    if (!el || !el.classList || !el.classList.contains('input-tgl-dmy')) return;
+    var d = el.value.replace(/\D/g, '').slice(0, 8), o = d;
+    if (d.length > 4) o = d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4);
+    else if (d.length > 2) o = d.slice(0, 2) + '/' + d.slice(2);
+    el.value = o;
+  });
+
   function animasiAngka(el, durasi, tunda) {
     const teks = (el.textContent || '').trim();
     const m = /^(\d+)(%?)$/.exec(teks);
@@ -2066,7 +2097,12 @@ console.info('[SPARTA] app.js versi 20261117 termuat');
         isiDisposisi: document.getElementById('editIsiDisposisi').value
       };
       if (document.getElementById('editUndanganFields').style.display !== 'none') {
-        payload.tanggalAcara = document.getElementById('editTanggalAcara').value;
+        var tglEditTxt = document.getElementById('editTanggalAcara').value.trim();
+        payload.tanggalAcara = tglKeISO(tglEditTxt);
+        if (tglEditTxt && !payload.tanggalAcara) {
+          showToast('Format Tanggal Acara harus dd/mm/yyyy (contoh 25/11/2026).', 'error');
+          return;
+        }
         var wktEdit = document.getElementById('editWaktuAcara').value;
         payload.waktuAcara = wktEdit ? wktEdit + ' ' + document.getElementById('editZonaAcara').value : '';
         payload.tempatAcara = document.getElementById('editTempatAcara').value;
@@ -2164,7 +2200,7 @@ console.info('[SPARTA] app.js versi 20261117 termuat');
         const undanganBox = document.getElementById('editUndanganFields');
         if (s.JenisSurat === 'Undangan' && res.undangan) {
           undanganBox.style.display = 'block';
-          document.getElementById('editTanggalAcara').value = res.undangan.tanggalAcara || '';
+          document.getElementById('editTanggalAcara').value = tglKeDMY(res.undangan.tanggalAcara);
           // Nilai tersimpan berbentuk "HH:mm WIB"; data lama tanpa zona dianggap WITA.
           var mWkt = /^(\d{1,2}):(\d{2})(?::\d{2})?\s*(WIB|WITA|WIT)?/i.exec(String(res.undangan.waktu || '').trim());
           document.getElementById('editWaktuAcara').value = mWkt ? ('0' + mWkt[1]).slice(-2) + ':' + mWkt[2] : '';
