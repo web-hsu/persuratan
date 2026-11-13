@@ -1667,3 +1667,20 @@ textarea.teruskan-pesan{ min-height:210px; font-size:13px; line-height:1.5; whit
   .landing-hero .kicker-judul::before, .landing-hero .kicker-judul::after{ width:22px; }
   .landing-hero .kicker-sub{ font-size:24px; }
 }
+
+
+/* ============ Halaman publik: judul "Lacak Status Surat Anda" satu kotak dengan kartu pencarian ============ */
+.landing-hero .tracking-search-box .judul-lacak{
+  margin:0 0 12px; padding:12px 16px 13px;
+  background:rgba(255,255,255,.55); border-radius:10px; text-align:center;
+}
+.landing-hero .tracking-search-box .judul-lacak h1{
+  margin:0 0 4px; font-size:22px; line-height:1.25; color:#14203a; text-shadow:none;
+}
+.landing-hero .tracking-search-box .judul-lacak p{
+  margin:0; font-size:13.5px; line-height:1.5; color:#1a2538; font-weight:500;
+}
+@media (max-width:560px){
+  .landing-hero .tracking-search-box .judul-lacak h1{ font-size:19px; }
+  .landing-hero .tracking-search-box .judul-lacak p{ font-size:14px; }
+}
