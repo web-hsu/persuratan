@@ -79,3 +79,70 @@
   new MutationObserver(tampilkanBarBila).observe(appPage, { attributes: true, attributeFilter: ['style'] });
   tampilkanBarBila();
 })();
+
+/* ---------- Dashboard gaya widget: widget sapaan di bagian atas ---------- */
+(function () {
+  'use strict';
+  var halaman = document.getElementById('page-dashboard');
+  var grid = document.getElementById('statsGrid');
+  var navAsli = document.getElementById('navTabs');
+  if (!halaman || !grid) return;
+
+  var hero = document.createElement('div');
+  hero.className = 'w-hero';
+  hero.id = 'widgetSapaan';
+  hero.innerHTML =
+    '<div class="w-hero-atas"><div><div class="w-sapa" id="wSapa">Halo</div><div class="w-nama" id="wNama">-</div></div>' +
+    '<div class="w-avatar" id="wAvatar">-</div></div>' +
+    '<div class="w-meta"><span id="wRole"></span><span id="wTanggal"></span></div>' +
+    '<div class="w-ringkas" id="wRingkas" style="display:none;"></div>' +
+    '<div class="w-aksi" id="wAksi"></div>';
+  halaman.insertBefore(hero, halaman.firstChild);
+
+  function teks(id) { var e = document.getElementById(id); return e ? e.textContent.trim() : ''; }
+
+  function perbarui() {
+    var jam = new Date().getHours();
+    var sapa = jam < 11 ? 'Selamat pagi' : (jam < 15 ? 'Selamat siang' : (jam < 18 ? 'Selamat sore' : 'Selamat malam'));
+    var nama = teks('userNamaLabel') || '-';
+    document.getElementById('wSapa').textContent = sapa;
+    document.getElementById('wNama').textContent = nama;
+    document.getElementById('wAvatar').textContent = (nama.charAt(0) || '?').toUpperCase();
+    document.getElementById('wRole').textContent = teks('userRoleLabel');
+    try {
+      document.getElementById('wTanggal').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
+    } catch (e) { /* abaikan */ }
+
+    // Ringkasan: angka pada papan berwarna amber (Menunggu Persetujuan / Dalam Proses)
+    var amber = grid.querySelector('.stat-box.amber .num');
+    var label = grid.querySelector('.stat-box.amber .label');
+    var r = document.getElementById('wRingkas');
+    if (amber && /^\d+$/.test(amber.textContent.trim())) {
+      r.style.display = '';
+      r.innerHTML = '<b>' + amber.textContent.trim() + '</b> surat ' + (label ? label.textContent.trim().toLowerCase() : 'dalam proses');
+    }
+  }
+
+  function aksiCepat() {
+    var wadah = document.getElementById('wAksi');
+    var daftar = [['registrasi', '📝', 'Registrasi'], ['disposisi', '✅', 'Persetujuan'], ['tracking', '🔎', 'Tracking']];
+    var html = '';
+    daftar.forEach(function (d) {
+      if (navAsli && navAsli.querySelector('.nav-item[data-page="' + d[0] + '"]')) {
+        html += '<button type="button" class="w-aksi-btn" data-ke="' + d[0] + '"><span>' + d[1] + '</span>' + d[2] + '</button>';
+      }
+    });
+    wadah.innerHTML = html;
+    wadah.querySelectorAll('.w-aksi-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = navAsli.querySelector('.nav-item[data-page="' + b.dataset.ke + '"]');
+        if (t) t.click();
+        window.scrollTo({ top: 0 });
+      });
+    });
+  }
+
+  new MutationObserver(perbarui).observe(grid, { childList: true, subtree: true, characterData: true });
+  if (navAsli) new MutationObserver(function () { perbarui(); aksiCepat(); }).observe(navAsli, { childList: true });
+  perbarui(); aksiCepat();
+})();
