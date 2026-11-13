@@ -1684,3 +1684,21 @@ textarea.teruskan-pesan{ min-height:210px; font-size:13px; line-height:1.5; whit
   .landing-hero .tracking-search-box .judul-lacak h1{ font-size:19px; }
   .landing-hero .tracking-search-box .judul-lacak p{ font-size:14px; }
 }
+
+
+/* ============ Halaman publik di smartphone: semua bagian (termasuk footer) tampil tanpa scroll ============ */
+.landing-wrap{ min-height:100vh; min-height:100dvh; }   /* 100dvh = tinggi layar yang benar-benar terlihat (di luar bilah alamat) */
+body{ min-height:100vh; min-height:100dvh; }
+@media (max-width:560px){
+  .landing-topbar{ padding:10px 16px; }
+  .landing-hero{ padding:14px 16px 10px; }
+  .landing-hero .kicker-judul{ font-size:20px; letter-spacing:3px; }
+  .landing-hero .kicker-judul::before, .landing-hero .kicker-judul::after{ width:20px; height:2px; }
+  .landing-hero .kicker-sub{ font-size:21px; }
+  .landing-hero .tracking-search-box{ padding:14px; margin-top:12px; }
+  .landing-hero .tracking-search-box .judul-lacak{ margin-bottom:10px; padding:9px 12px 10px; }
+  .landing-hero .tracking-search-box .judul-lacak h1{ font-size:17px; margin-bottom:2px; }
+  .landing-hero .tracking-search-box .judul-lacak p{ font-size:12.5px; line-height:1.45; }
+  .catatan-privasi{ font-size:12.5px; line-height:1.45; padding:8px 10px; margin-top:10px; }
+  footer.app-footer{ padding:8px 16px 12px; font-size:10.5px; line-height:1.4; }
+}
