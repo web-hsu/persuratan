@@ -273,3 +273,11 @@ body.android-app #statsGrid .progress-stat-box .tahap-meta{ display:none; }
 /* ---------- Ringkas: halaman lain ---------- */
 .android-app .card .desc{ font-size:12.5px; }
 .android-app .card h2{ margin-bottom:4px; }
+
+
+/* Enam menu di bilah bawah: ukuran ikon & label sedikit diringkas */
+.bn-item{ gap:2px; }
+.bn-ikon{ width:36px; height:34px; border-radius:13px; }
+.bn-ikon svg{ width:20px; height:20px; }
+.bn-teks{ font-size:9.5px; }
+.bottom-nav{ padding:0 3px; }

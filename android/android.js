@@ -37,6 +37,7 @@
     { p: 'dashboard',    teks: 'Dashboard' },
     { p: 'registrasi',   teks: 'Registrasi' },
     { p: 'semuasurat',   teks: 'Surat Masuk' },
+    { p: 'disposisi',    teks: 'Proses' },
     { p: 'suratselesai', teks: 'Selesai' }
   ];
 
